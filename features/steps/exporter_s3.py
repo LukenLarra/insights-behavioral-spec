@@ -19,7 +19,7 @@ import csv
 
 from behave import given, then
 from src.csv_checks import check_table_content
-from src.minio import (
+from src.minio_utils import (
     bucket_check,
     create_bucket,
     get_object_name,

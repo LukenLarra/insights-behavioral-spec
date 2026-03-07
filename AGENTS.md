@@ -35,7 +35,7 @@ insights-behavioral-spec/
 │   ├── insights-results-aggregator-mock/    # Mock service tests
 │   ├── OCM/                      # OpenShift Cluster Manager tests
 │   ├── OCP_WebConsole/           # OCP Web Console tests
-│   ├── parquet-factory/          # Parquet factory tests
+│   # parquet-factory/          # Parquet factory tests (movido a otro repo)
 │   ├── SHA_Extractor/            # SHA extractor tests
 │   ├── smart-proxy/              # Smart proxy tests
 │   ├── src/                      # Shared Python utilities

@@ -33,7 +33,7 @@ services:
       - test-sha-extractor
       - test-dvo-extractor
       - test-dvo-writer
-      - test-parquet-factory
+
     image: quay.io/ccxdev/kafka-no-zk:latest
     ports:
       - 9092:9092
