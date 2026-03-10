@@ -13,10 +13,10 @@ from src import kafka_util
 from src.process_output import path_from_context
 
 # parquet-factory binary file name
-PARQUET_FACTORY_BINARY = "parquet-factory"
+PARQUET_FACTORY_BINARY = os.environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
 
 # path do directory with rules results templates to be used
-DATA_DIRECTORY = "test_data"
+DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
 
 
 @when('I set the environment variable "{env_name}" to "{env_value}"')
