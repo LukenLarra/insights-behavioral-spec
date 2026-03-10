@@ -12,6 +12,9 @@ tests:
     environment: "insights-behavioral-spec/features/environment.py"
   env:
     PYTHONPATH: "insights-behavioral-spec/features/src:insights-behavioral-spec/features/steps:insights-behavioral-spec/features:insights-behavioral-spec"
+    KAFKA_HOST: "localhost"
+    KAFKA_PORT: "9092"
+    PARQUET_FACTORY__KAFKA_RULES__ADDRESS: "localhost:9092"
     S3_OLDER_MINIO_COMPATIBILITY: "1"
     PARQUET_FACTORY__S3__ENDPOINT: "localhost:9000"
     PARQUET_FACTORY__S3__BUCKET: "test"
