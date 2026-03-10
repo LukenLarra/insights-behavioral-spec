@@ -12,7 +12,6 @@
 	content-template-renderer insights-content-template-renderer-tests \
 	sha-extractor insights-sha-extractor-tests \
 	smart-proxy smart-proxy-tests smart-proxy-code-coverage \
-	parquet-factory parquet-factory-tests parquet-factory-code-coverage \
 	docker-build install-type-libraries type-checks strict-type-checks missing-types
 
 default: tests
@@ -93,13 +92,7 @@ smart-proxy smart-proxy-tests: ## Run BDD tests for the Insights Results Smart P
 smart-proxy-code-coverage: ## Compute code coverage for Smart Proxy service
 	PATH_TO_LOCAL_SMART_PROXY=$${SERVICE_UNDER_TEST:-$$PATH_TO_LOCAL_SMART_PROXY} ./smart_proxy_tests.sh coverage
 
-parquet-factory parquet-factory-tests: ## Run BDD tests for the Parquet Factory
-	PATH_TO_LOCAL_PARQUET_FACTORY=$${SERVICE_UNDER_TEST:-$$PATH_TO_LOCAL_PARQUET_FACTORY} ./parquet_factory_tests.sh
-
-parquet-factory-code-coverage: ## Compute code coverage for Parquet Factory
-	PATH_TO_LOCAL_PARQUET_FACTORY=$${SERVICE_UNDER_TEST:-$$PATH_TO_LOCAL_PARQUET_FACTORY} ./parquet_factory_tests.sh coverage
-
-style: code-style docs-style shellcheck ## Perform all style checks
+style:	code-style docs-style shellcheck ## Perform all style checks
 
 code-style: ruff ## Check code style for all Python sources from this repository
 
