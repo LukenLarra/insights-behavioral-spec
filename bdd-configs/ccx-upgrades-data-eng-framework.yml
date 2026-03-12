@@ -1,0 +1,14 @@
+project:
+  name: "ccx-upgrades-data-eng"
+  version: "1.0.0"
+
+tests:
+  enabled: true
+  path: "."
+  command: "python -m behave insights-behavioral-spec/features/ccx-upgrades-data-eng --junit --junit-directory reports/junit --format pretty"
+  bdd:
+    features: "insights-behavioral-spec/features/ccx-upgrades-data-eng"
+    steps: "insights-behavioral-spec/features/steps"
+    environment: "insights-behavioral-spec/features/environment.py"
+  env:
+    PYTHONPATH: "insights-behavioral-spec/features/src:insights-behavioral-spec/features/steps:insights-behavioral-spec/features:insights-behavioral-spec"
