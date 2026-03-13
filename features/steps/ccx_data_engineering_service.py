@@ -68,7 +68,7 @@ def start_RHOBS_mock_service(context, port):
     """Run RHOBS service mock for a test and prepare its stop."""
     mock_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "..", "mocks", "rhobs"
+        "..", "..", "mocks", "rhobs"
     )
     params = ["uvicorn", "rhobs_service:app", "--port", str(port)]
 
