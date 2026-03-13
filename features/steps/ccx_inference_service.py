@@ -51,8 +51,13 @@ def start_ccx_inference_service(context, port):
 
 @given("The mock CCX Inference Service is running on port {port:d}")
 def start_ccx_inference_mock_service(context, port):
-    """Run ccx-inference-service for a test and prepare its stop."""
-    params = ["uvicorn", "mocks.inference-service.inference_service:app", "--port", str(port)]
+    """Run ccx-inference-service mock for a test and prepare its stop."""
+    mock_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "..", "mocks", "inference-service"
+    )
+    params = ["uvicorn", "inference_service:app", "--port", str(port)]
+
     stdout_path = path_from_context(context, "", "inference-mock-stdout")
     stderr_path = path_from_context(context, "", "inference-mock-stderr")
 
@@ -62,16 +67,7 @@ def start_ccx_inference_mock_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    env = os.environ.copy()
-    venv_bin = os.path.dirname(sys.executable)
-    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
-    
-    workspace = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
-    insights_path = os.path.join(workspace, "insights-behavioral-spec")
-    existing_pythonpath = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = f"{insights_path}{os.pathsep}{existing_pythonpath}" if existing_pythonpath else insights_path
-    
-    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
+    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, cwd=mock_dir)
     assert popen is not None
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
 
