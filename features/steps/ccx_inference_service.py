@@ -42,6 +42,9 @@ def start_ccx_inference_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    venv_bin = os.path.dirname(sys.executable)
+    env = {"PATH": f"{venv_bin}{os.pathsep}{os.environ.get('PATH', '')}"}
+
     popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 
