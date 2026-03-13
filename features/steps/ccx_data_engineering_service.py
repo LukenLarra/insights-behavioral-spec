@@ -30,7 +30,7 @@ def start_ccx_upgrades_data_eng(context, port):
     """Run ccx-upgrades-data-eng for a test and prepare its stop."""
     service_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "..", ".."
+        "..", "..", ".."
     )
     params = [
         "uvicorn",
