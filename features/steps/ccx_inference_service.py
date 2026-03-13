@@ -54,7 +54,7 @@ def start_ccx_inference_mock_service(context, port):
     """Run ccx-inference-service mock for a test and prepare its stop."""
     mock_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "..", "mocks", "inference-service"
+        "..", "..", "mocks", "inference-service"
     )
     params = ["uvicorn", "inference_service:app", "--port", str(port)]
 
