@@ -18,6 +18,7 @@
 import os
 import subprocess
 import time
+import sys
 
 import requests
 from behave import given, when
@@ -42,6 +43,9 @@ def start_ccx_upgrades_data_eng(context, port):
     for row in context.table:
         var, val = row["variable"], row["value"]
         env[var] = val
+
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
 
     stdout_path = path_from_context(context, "ccx-upgrades-data-eng", "stdout")
     stderr_path = path_from_context(context, "ccx-upgrades-data-eng", "stderr")
