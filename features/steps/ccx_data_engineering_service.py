@@ -29,6 +29,10 @@ from src.process_output import path_from_context
 @given("The CCX Data Engineering Service is running on port {port:d} with envs")
 def start_ccx_upgrades_data_eng(context, port):
     """Run ccx-upgrades-data-eng for a test and prepare its stop."""
+    service_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "..", ".."
+    )
     params = [
         "uvicorn",
         "ccx_upgrades_data_eng.main:app",
@@ -39,7 +43,6 @@ def start_ccx_upgrades_data_eng(context, port):
     ]
     env = os.environ.copy()
 
-    # Update the environment with variables configured by the test
     for row in context.table:
         var, val = row["variable"], row["value"]
         env[var] = val
@@ -60,6 +63,7 @@ def start_ccx_upgrades_data_eng(context, port):
         stdout=stdout_file,
         stderr=stderr_file,
         env=env,
+        cwd=service_dir,
     )
     assert popen is not None
 
