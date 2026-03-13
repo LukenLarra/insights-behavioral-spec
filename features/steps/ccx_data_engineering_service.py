@@ -66,7 +66,11 @@ def start_ccx_upgrades_data_eng(context, port):
 @given("The mock RHOBS Service is running on port {port:d}")
 def start_RHOBS_mock_service(context, port):
     """Run RHOBS service mock for a test and prepare its stop."""
-    params = ["uvicorn", "mocks.rhobs.rhobs_service:app", "--port", str(port)]
+    mock_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "..", "mocks", "rhobs"
+    )
+    params = ["uvicorn", "rhobs_service:app", "--port", str(port)]
 
     stdout_path = path_from_context(context, "", "rhobs-mock-stdout")
     stderr_path = path_from_context(context, "", "rhobs-mock-stderr")
@@ -77,11 +81,10 @@ def start_RHOBS_mock_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file)
+    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, cwd=mock_dir)
     assert popen is not None
-
-    # time.sleep(0.5)
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
+
     context.add_cleanup(popen.terminate)
     context.mock_rhobs = popen
     context.mock_rhobs_port = port
