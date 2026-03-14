@@ -37,8 +37,6 @@ def start_ccx_upgrades_data_eng(context, port):
         "ccx_upgrades_data_eng.main:app",
         "--port",
         str(port),
-        "--log-config",
-        "config/ccx-upgrades-data-eng_logging.yaml",
     ]
     env = os.environ.copy()
 
