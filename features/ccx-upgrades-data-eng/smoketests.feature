@@ -15,10 +15,10 @@ Feature: Basic set of smoke tests - checks if all required tools are available a
           | variable                    | value                                  |
           | CLIENT_ID                   | test-client-id                         |
           | CLIENT_SECRET               | test-client-secret                     |
-          | INFERENCE_URL               | http://localhost:9090                  |
+          | INFERENCE_URL               | http://localhost:8001                  |
           | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
           | ALLOW_INSECURE              | 1                                      |
-          | RHOBS_URL                   | http://localhost:9091                  |
+          | RHOBS_URL                   | http://localhost:8002                  |
           | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
      When I request the openapi.json endpoint in localhost:8000
      Then The status code of the response is 200
