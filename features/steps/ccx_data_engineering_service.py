@@ -18,6 +18,7 @@
 import os
 import subprocess
 import time
+import sys
 
 import requests
 from behave import given, when
@@ -77,7 +78,10 @@ def start_RHOBS_mock_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file)
+    env = os.environ.copy()
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
+    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 
     # time.sleep(0.5)
