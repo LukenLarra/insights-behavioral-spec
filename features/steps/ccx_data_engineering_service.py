@@ -81,6 +81,12 @@ def start_RHOBS_mock_service(context, port):
     env = os.environ.copy()
     venv_bin = os.path.dirname(sys.executable)
     env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
+
+    workspace = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
+    insights_path = os.path.join(workspace, "insights-behavioral-spec")
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{insights_path}{os.pathsep}{existing_pythonpath}" if existing_pythonpath else insights_path
+
     popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 
