@@ -17,7 +17,6 @@
 import os
 import subprocess
 import time
-import sys
 
 import requests
 from behave import given, when
@@ -28,10 +27,6 @@ from src.process_output import path_from_context
 @given("The CCX Data Engineering Service is running on port {port:d} with envs")
 def start_ccx_upgrades_data_eng(context, port):
     """Run ccx-upgrades-data-eng for a test and prepare its stop."""
-    service_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", ".."
-    )
     params = [
         "uvicorn",
         "ccx_upgrades_data_eng.main:app",
@@ -42,12 +37,10 @@ def start_ccx_upgrades_data_eng(context, port):
     ]
     env = os.environ.copy()
 
+    # Update the environment with variables configured by the test
     for row in context.table:
         var, val = row["variable"], row["value"]
         env[var] = val
-
-    venv_bin = os.path.dirname(sys.executable)
-    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
 
     stdout_path = path_from_context(context, "ccx-upgrades-data-eng", "stdout")
     stderr_path = path_from_context(context, "ccx-upgrades-data-eng", "stderr")
@@ -62,7 +55,6 @@ def start_ccx_upgrades_data_eng(context, port):
         stdout=stdout_file,
         stderr=stderr_file,
         env=env,
-        cwd=service_dir,
     )
     assert popen is not None
 
@@ -73,11 +65,7 @@ def start_ccx_upgrades_data_eng(context, port):
 @given("The mock RHOBS Service is running on port {port:d}")
 def start_rhobs_mock_service(context, port):
     """Run RHOBS service mock for a test and prepare its stop."""
-    mock_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "mocks", "rhobs"
-    )
-    params = ["uvicorn", "rhobs_service:app", "--port", str(port)]
+    params = ["uvicorn", "mocks.rhobs.rhobs_service:app", "--port", str(port)]
 
     stdout_path = path_from_context(context, "", "rhobs-mock-stdout")
     stderr_path = path_from_context(context, "", "rhobs-mock-stderr")
@@ -88,10 +76,11 @@ def start_rhobs_mock_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, cwd=mock_dir)
+    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file)
     assert popen is not None
-    check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
 
+    # time.sleep(0.5)
+    check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
     context.add_cleanup(popen.terminate)
     context.mock_rhobs = popen
     context.mock_rhobs_port = port
