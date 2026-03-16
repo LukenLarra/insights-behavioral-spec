@@ -30,6 +30,9 @@ def start_ccx_inference_service(context, port):
     params = ["uvicorn", "ccx_upgrades_inference.main:app", "--port", str(port)]
     env = os.environ.copy()
 
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
+
     stdout_path = path_from_context(context, "ccx-upgrades-inference", "stdout")
     stderr_path = path_from_context(context, "ccx-upgrades-inference", "stderr")
 
