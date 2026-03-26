@@ -39,7 +39,6 @@ tests:
     steps: "insights-behavioral-spec/features/steps"
     environment: "insights-behavioral-spec/features/environment.py"
   env:
-    PYTHONPATH: "insights-behavioral-spec/features/src:insights-behavioral-spec/features/steps:insights-behavioral-spec/features:insights-behavioral-spec"
     KAFKA_HOST: "localhost"
     KAFKA_PORT: "9092"
     PARQUET_FACTORY__KAFKA_RULES__ADDRESS: "localhost:9092"
