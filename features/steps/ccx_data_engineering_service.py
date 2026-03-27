@@ -17,6 +17,7 @@
 import os
 import subprocess
 import time
+import sys
 
 import requests
 from behave import given, when
@@ -33,7 +34,7 @@ def start_ccx_upgrades_data_eng(context, port):
         "--port",
         str(port),
         "--log-config",
-        "config/ccx-upgrades-data-eng_logging.yaml",
+        "logging.yaml",
     ]
     env = os.environ.copy()
 
@@ -41,6 +42,9 @@ def start_ccx_upgrades_data_eng(context, port):
     for row in context.table:
         var, val = row["variable"], row["value"]
         env[var] = val
+
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
 
     stdout_path = path_from_context(context, "ccx-upgrades-data-eng", "stdout")
     stderr_path = path_from_context(context, "ccx-upgrades-data-eng", "stderr")
@@ -76,7 +80,11 @@ def start_rhobs_mock_service(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file)
+    env = os.environ.copy()
+    venv_bin = os.path.dirname(sys.executable)
+    env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
+
+    popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 
     # time.sleep(0.5)

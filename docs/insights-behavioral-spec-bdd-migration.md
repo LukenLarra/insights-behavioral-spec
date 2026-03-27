@@ -27,32 +27,32 @@ Ejemplo — `bdd-configs/parquet-factory-framework.yml`:
 
 ```yaml
 project:
-  name: "parquet-factory"
-  version: "1.0.0"
+    name: "parquet-factory"
+    version: "1.0.0"
 
 tests:
-  enabled: true
-  path: "."
-  command: "python -m behave insights-behavioral-spec/features/parquet-factory --junit --junit-directory reports/junit --format pretty"
-  bdd:
-    features: "insights-behavioral-spec/features/parquet-factory"
-    steps: "insights-behavioral-spec/features/steps"
-    environment: "insights-behavioral-spec/features/environment.py"
-  env:
-    KAFKA_HOST: "localhost"
-    KAFKA_PORT: "9092"
-    PARQUET_FACTORY__KAFKA_RULES__ADDRESS: "localhost:9092"
-    S3_OLDER_MINIO_COMPATIBILITY: "1"
-    PARQUET_FACTORY__S3__ENDPOINT: "localhost:9000"
-    PARQUET_FACTORY__S3__BUCKET: "test"
-    PARQUET_FACTORY__S3__ACCESS_KEY: "test_access_key"
-    PARQUET_FACTORY__S3__SECRET_KEY: "test_secret_access_key"
-    PARQUET_FACTORY__S3__USE_SSL: "false"
-    PARQUET_FACTORY__S3__PREFIX: "fleet_aggregations"
-    PARQUET_FACTORY__S3__REGION: "us-east-1"
-    PARQUET_FACTORY__METRICS__GATEWAY_URL: "localhost:9091"
-    PARQUET_FACTORY_BIN: "./parquet-factory"
-    TEST_DATA_DIR: "insights-behavioral-spec/test_data"
+    enabled: true
+    path: "."
+    command: "python -m behave insights-behavioral-spec/features/parquet-factory --junit --junit-directory reports/junit --format pretty"
+    bdd:
+        features: "insights-behavioral-spec/features/parquet-factory"
+        steps: "insights-behavioral-spec/features/steps"
+        environment: "insights-behavioral-spec/features/environment.py"
+    env:
+        KAFKA_HOST: "localhost"
+        KAFKA_PORT: "9092"
+        PARQUET_FACTORY__KAFKA_RULES__ADDRESS: "localhost:9092"
+        S3_OLDER_MINIO_COMPATIBILITY: "1"
+        PARQUET_FACTORY__S3__ENDPOINT: "localhost:9000"
+        PARQUET_FACTORY__S3__BUCKET: "test"
+        PARQUET_FACTORY__S3__ACCESS_KEY: "test_access_key"
+        PARQUET_FACTORY__S3__SECRET_KEY: "test_secret_access_key"
+        PARQUET_FACTORY__S3__USE_SSL: "false"
+        PARQUET_FACTORY__S3__PREFIX: "fleet_aggregations"
+        PARQUET_FACTORY__S3__REGION: "us-east-1"
+        PARQUET_FACTORY__METRICS__GATEWAY_URL: "localhost:9091"
+        PARQUET_FACTORY_BIN: "./parquet-factory"
+        TEST_DATA_DIR: "insights-behavioral-spec/test_data"
 ```
 
 ### 2. Modificación de `features/steps/parquet_factory.py`
