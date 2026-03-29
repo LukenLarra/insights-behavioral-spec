@@ -69,7 +69,13 @@ def start_ccx_upgrades_data_eng(context, port):
 @given("The mock RHOBS Service is running on port {port:d}")
 def start_rhobs_mock_service(context, port):
     """Run RHOBS service mock for a test and prepare its stop."""
-    params = ["uvicorn", "mocks.rhobs.rhobs_service:app", "--port", str(port)]
+    mock_dir = os.path.join(
+        os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
+        "insights-behavioral-spec",
+        "mocks",
+        "rhobs",
+    )
+    params = ["uvicorn", "rhobs_service:app", "--port", str(port), "--app-dir", mock_dir]
 
     stdout_path = path_from_context(context, "", "rhobs-mock-stdout")
     stderr_path = path_from_context(context, "", "rhobs-mock-stderr")
