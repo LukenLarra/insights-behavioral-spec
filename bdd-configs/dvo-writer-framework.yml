@@ -32,4 +32,6 @@ tests:
         DB_NAME: "test"
         DB_USER: "postgres"
         DB_PASS: "postgres"
+        KAFKA_HOST: "localhost"
+        KAFKA_PORT: "9092"
         PATH_TO_LOCAL_DVO_WRITER: "insights-behavioral-spec/insights-results-aggregator"

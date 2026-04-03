@@ -42,6 +42,7 @@ FEATURES_WITH_KAFKA = (
     "notification_writer",
     "notification_service",
     "parquet_service",
+    "dvo_writer",
 )
 
 # Setup all environment variables needed to work with Minio (local or remote)
