@@ -20,6 +20,8 @@ tests:
         INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_DB_NAME: "test" # Base de datos standard en GHA o docker
         INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE: "sql"
         INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE: "dvo_recommendations"
+        INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST: "localhost"
+        INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES: "localhost:9092"
         DB_HOST: "localhost"
         DB_NAME: "test"
         DB_USER: "postgres"
