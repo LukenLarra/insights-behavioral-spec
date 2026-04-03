@@ -4,7 +4,7 @@ project:
 
 tests:
     enabled: true
-    path: "insights-behavioral-spec"
+    path: "."
     command: "python -m behave @insights-behavioral-spec/test_list/dvo_writer.txt --junit --junit-directory reports/junit --format pretty"
     bdd:
         features: "insights-behavioral-spec/features/dvo-writer"
