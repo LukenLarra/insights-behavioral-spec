@@ -12,7 +12,7 @@ tests:
         environment: "insights-behavioral-spec/features/environment.py"
     env:
         ENV_DOCKER: "1"
-        INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE: "config/insights_results_aggregator_docker_env.toml"
+        INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE: "insights-behavioral-spec/config/insights_results_aggregator_docker_env.toml"
         INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_USERNAME: "postgres"
         INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD: "postgres"
         INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_HOST: "localhost"

@@ -69,10 +69,6 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
         if not hasattr(context, "no_IRA_environment")
         else context.no_IRA_environment
     )
-    # Check if the config file path needs to be adjusted when running from parent directory
-    if not os.path.exists(config) and os.path.exists(os.path.join("insights-behavioral-spec", config)):
-        config = os.path.join("insights-behavioral-spec", config)
-        
     # add new environment variable into environments
     environment["INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"] = config
     start_aggregator(context, flag, environment)
