@@ -175,10 +175,6 @@ def perform_aggregator_database_migration(context, version):
 
     # check if subprocess has been started and its output caught
     assert out is not None
-    
-    stdout_file_dvo = path_from_context(context, "dvo", "stdout")
-    stderr_file_dvo = path_from_context(context, "dvo", "stderr")
-    process_generated_output(context, out, 2, stdout_file_dvo, stderr_file_dvo)
 
     environ["INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE"] = "ocp_recommendations"
 
