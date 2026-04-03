@@ -1,0 +1,22 @@
+project:
+    name: "dvo-writer"
+    version: "1.0.0"
+
+tests:
+    enabled: true
+    path: "."
+    command: "python -m behave @insights-behavioral-spec/test_list/dvo_writer.txt --junit --junit-directory reports/junit --format pretty"
+    bdd:
+        features: "insights-behavioral-spec/features/dvo-writer"
+        steps: "insights-behavioral-spec/features/steps"
+        environment: "insights-behavioral-spec/features/environment.py"
+    env:
+        INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE: "insights-behavioral-spec/config/dvo_writer_docker_env.toml"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_USERNAME: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_HOST: "localhost"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PORT: "5432"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_DB_NAME: "test" # Base de datos standard en GHA o docker
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE: "sql"
+        INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE: "dvo_recommendations"
+        PATH_TO_LOCAL_DVO_WRITER: "insights-behavioral-spec/insights-results-aggregator"
