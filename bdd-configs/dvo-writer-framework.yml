@@ -11,6 +11,7 @@ tests:
         steps: "insights-behavioral-spec/features/steps"
         environment: "insights-behavioral-spec/features/environment.py"
     env:
+        ENV_DOCKER: "1"
         INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE: "insights-behavioral-spec/config/dvo_writer_docker_env.toml"
         INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_USERNAME: "postgres"
         INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD: "postgres"
