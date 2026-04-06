@@ -22,3 +22,4 @@ types-requests
 uvicorn[standard]
 virtualenv>=20.28.0
 setuptools>=70.0.0
+groq

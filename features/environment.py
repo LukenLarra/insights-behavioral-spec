@@ -24,6 +24,7 @@ Currently four events have been registered:
 import os
 from pathlib import Path
 from subprocess import TimeoutExpired
+from groq import Groq
 
 import psycopg2
 
@@ -74,6 +75,13 @@ def before_all(context):
     if not context.logs_dir.exists():
         context.logs_dir.mkdir(parents=True)
 
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if groq_api_key:
+        context.llm_client = Groq(api_key=groq_api_key)
+        context.llm_enabled = True
+    else:
+        context.llm_client = None
+        context.llm_enabled = False
 
 def before_scenario(context, scenario):
     """Run before each scenario is run."""
