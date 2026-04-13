@@ -31,10 +31,10 @@ import psycopg2
 # tags specified in feature files
 
 # Clean database before the first scenario in feature file
-FEATURES_CLEAN_DB = ("aggregator", "aggregator_cleaner", "aggregator_exporter")
+FEATURES_CLEAN_DB = ("aggregator", "aggregator_cleaner", "aggregator_exporter", "dvo_writer")
 
 # Initialize database before the first scenario in feature file
-FEATURES_INIT_DB = ("aggregator", "notification_service")
+FEATURES_INIT_DB = ("aggregator", "notification_service", "dvo_writer")
 
 # Setup all environment variables needed to work with Kafka (local or remote)
 FEATURES_WITH_KAFKA = (
@@ -42,6 +42,7 @@ FEATURES_WITH_KAFKA = (
     "notification_writer",
     "notification_service",
     "parquet_service",
+    "dvo_writer",
 )
 
 # Setup all environment variables needed to work with Minio (local or remote)

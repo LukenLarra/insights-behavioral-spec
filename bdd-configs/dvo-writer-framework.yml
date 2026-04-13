@@ -1,0 +1,37 @@
+project:
+    name: "dvo-writer"
+    version: "1.0.0"
+
+tests:
+    enabled: true
+    path: "."
+    command: "python -m behave @insights-behavioral-spec/test_list/dvo_writer.txt --junit --junit-directory reports/junit --format pretty"
+    bdd:
+        features: "insights-behavioral-spec/features/dvo-writer"
+        steps: "insights-behavioral-spec/features/steps"
+        environment: "insights-behavioral-spec/features/environment.py"
+    env:
+        ENV_DOCKER: "1"
+        INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE: "insights-behavioral-spec/config/dvo_writer_docker_env.toml"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_USERNAME: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_HOST: "localhost"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PORT: "5432"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_DB_NAME: "test"
+        INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE: "sql"
+        INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE: "dvo_recommendations"
+        INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST: "localhost"
+        INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES: "localhost:9092"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_HOST: "localhost"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_USERNAME: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD: "postgres"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PORT: "5432"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_DB_NAME: "test"
+        INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE: "sql"
+        DB_HOST: "localhost"
+        DB_NAME: "test"
+        DB_USER: "postgres"
+        DB_PASS: "postgres"
+        KAFKA_HOST: "localhost"
+        KAFKA_PORT: "9092"
+        PATH_TO_LOCAL_DVO_WRITER: "insights-behavioral-spec/insights-results-aggregator"
