@@ -11,6 +11,7 @@
 	content-service insights-content-service-tests \
 	content-template-renderer insights-content-template-renderer-tests \
 	sha-extractor insights-sha-extractor-tests \
+	parquet-factory parquet-factory-tests \
 	smart-proxy smart-proxy-tests smart-proxy-code-coverage \
 	docker-build install-type-libraries type-checks strict-type-checks missing-types
 
@@ -70,6 +71,9 @@ inference-service inference-service-tests: ## Run BDD tests for the Inference Se
 
 data-engineering-service data-engineering-service-tests: ## Run BDD tests for the Data Engineering Service
 	PATH_TO_LOCAL_DATA_ENG_SERVICE=$${SERVICE_UNDER_TEST:-$$PATH_TO_LOCAL_DATA_ENG_SERVICE} ./ccx_upgrade_risk_data_eng_tests.sh
+
+parquet-factory parquet-factory-tests: ## Run BDD tests for the Parquet Factory
+	PATH_TO_LOCAL_PARQUET_FACTORY=$${SERVICE_UNDER_TEST:-$$PATH_TO_LOCAL_PARQUET_FACTORY} ./parquet_factory_tests.sh
 
 dvo-extractor dvo-extractor-tests: ## Run BDD tests for the DVO Extractor
 	./dvo_extractor_tests.sh

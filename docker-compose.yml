@@ -12,7 +12,7 @@ services:
 
   database:
     ports:
-      - 25432:5432
+      - 5432:5432
     image: postgres:13.9
     environment:
       - POSTGRES_USER=postgres

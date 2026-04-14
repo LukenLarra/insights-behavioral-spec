@@ -1,0 +1,146 @@
+name: BDD Tests
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+
+jobs:
+    detect-changes:
+        runs-on: ubuntu-latest
+        outputs:
+            matrix: ${{ steps.set-matrix.outputs.matrix }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                  filters: |
+                      aggregator:
+                          - 'features/insights-results-aggregator/**'
+                          - 'bdd-configs/insights-results-aggregator-framework.yml'
+                          - 'config/insights_results_aggregator*'
+                          - 'features/steps/insights_results_aggregator.py'
+                          - 'features/steps/aggregator_*.py'
+                          - 'features/steps/common_aggregator.py'
+                      data_eng:
+                          - 'features/ccx-upgrades-data-eng/**'
+                          - 'bdd-configs/data-engineering-service-framework.yml'
+                          - 'config/ccx-upgrades-data-eng*'
+                          - 'features/steps/ccx_data_engineering_service.py'
+                          - 'features/steps/ccx_inference_service.py'
+
+                      parquet_factory:
+                          - 'features/parquet-factory/**'
+                          - 'bdd-configs/parquet-factory-framework.yml'
+                          - 'features/steps/parquet_*.py'
+                      global:
+                          - 'requirements.txt'
+                          - 'features/steps/common*.py'
+                          - 'features/steps/kafka*.py'
+                          - 'features/environment*.py'
+                          - 'src/**'
+                          - '.github/workflows/pr-bdd-tests.yml'
+            - id: set-matrix
+              run: |
+                  SERVICES="[]"
+                  if [[ "${{ steps.filter.outputs.global }}" == 'true' ]]; then
+                      SERVICES='[
+                          {"repo": "insights-results-aggregator", "service": "aggregator", "config": "insights-results-aggregator-framework.yml"},
+                          {"repo": "ccx-upgrades-data-eng", "service": "data-engineering-service", "config": "data-engineering-service-framework.yml"},
+                          {"repo": "parquet-factory", "service": "parquet-factory", "config": "parquet-factory-framework.yml"}
+                      ]'
+                  else
+                      if [[ "${{ steps.filter.outputs.aggregator }}" == 'true' ]]; then
+                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "insights-results-aggregator", "service": "aggregator", "config": "insights-results-aggregator-framework.yml"}]')
+                      fi
+                      if [[ "${{ steps.filter.outputs.data_eng }}" == 'true' ]]; then
+                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "ccx-upgrades-data-eng", "service": "data-engineering-service", "config": "data-engineering-service-framework.yml"}]')
+                      fi
+                      if [[ "${{ steps.filter.outputs.parquet_factory }}" == 'true' ]]; then
+                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "parquet-factory", "service": "parquet-factory", "config": "parquet-factory-framework.yml"}]')
+                      fi
+                  fi
+                  MATRIX="{\"include\": $(echo $SERVICES | jq -c .)}"
+                  echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+    bdd-tests:
+        needs: detect-changes
+        if: ${{ fromJson(needs.detect-changes.outputs.matrix).include[0] != null }}
+        name: Test ${{ matrix.service }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+
+        steps:
+            - name: Checkout behavioral spec repository
+              uses: actions/checkout@v4
+              with:
+                  path: insights-behavioral-spec
+
+            - name: Checkout service repository
+              uses: actions/checkout@v4
+              with:
+                  repository: RedHatInsights/${{ matrix.repo }}
+                  path: ${{ matrix.repo }}
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.20"
+              if: matrix.repo == 'insights-results-aggregator' || matrix.repo == 'parquet-factory'
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install Python dependencies
+              working-directory: insights-behavioral-spec
+              run: pip install -r requirements.txt
+
+            - name: Build service binary (Go services)
+              if: matrix.repo == 'insights-results-aggregator' || matrix.repo == 'parquet-factory'
+              working-directory: ${{ matrix.repo }}
+              run: make build
+
+            - name: Start infrastructure services
+              working-directory: insights-behavioral-spec
+              run: |
+                  if [ "${{ matrix.service }}" == "aggregator" ]; then
+                    docker compose --profile test-aggregator up -d
+                  elif [ "${{ matrix.service }}" == "data-engineering-service" ]; then
+                    docker compose --profile test-upgrades-data-eng up -d
+                  elif [ "${{ matrix.service }}" == "parquet-factory" ]; then
+                    docker compose --profile test-parquet-factory up -d
+                  fi
+
+            - name: Run BDD Framework
+              uses: LukenLarra/RedHat-BDD-Framework/actions/main@improve-test-reporting
+              with:
+                  service: ${{ matrix.service }}
+                  bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
+                  test_requirements: "insights-behavioral-spec/requirements.txt"
+                  service_package: ${{ github.workspace }}/${{ matrix.repo }}
+
+            - name: Archive Behave logs
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: behave-logs-${{ matrix.service }}
+                  path: insights-behavioral-spec/logs/
+                  retention-days: 5
+
+            - name: Stop infrastructure services
+              if: always()
+              working-directory: insights-behavioral-spec
+              run: |
+                  if [ "${{ matrix.service }}" == "aggregator" ]; then
+                    docker compose --profile test-aggregator down -v
+                  elif [ "${{ matrix.service }}" == "data-engineering-service" ]; then
+                    docker compose --profile test-upgrades-data-eng down -v
+                  elif [ "${{ matrix.service }}" == "parquet-factory" ]; then
+                    docker compose --profile test-parquet-factory down -v
+                  fi
