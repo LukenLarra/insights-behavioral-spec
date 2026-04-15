@@ -39,12 +39,14 @@ jobs:
                       repo = extract('repo')
                       service = extract('service')
                       if repo and service:
+                          build_go = str(extract('build_go') or '').lower() == 'true'
                           services.append({
                               'repo': repo,
                               'service': service,
                               'config': os.path.basename(file),
                               'profile': extract('docker_profile') or '',
-                              'build_go': str(extract('build_go') or '').lower() == 'true'
+                              'build_go': build_go,
+                              'service_package': '' if build_go else repo
                           })
 
                   matrix_json = json.dumps({'include': services})
@@ -130,7 +132,15 @@ jobs:
               if: matrix.build_go
               uses: actions/setup-go@v5
               with:
-                  go-version: "1.20"
+                  go-version: "1.25"
+
+            - name: Fix invalid Go version directive
+              if: matrix.build_go
+              working-directory: ${{ matrix.repo }}
+              run: |
+                  if [ -f go.mod ]; then
+                    perl -pi -e 's/^go (\d+\.\d+)\.\d+$/go $1/' go.mod
+                  fi
 
             - name: Set up Python
               uses: actions/setup-python@v5
@@ -160,7 +170,7 @@ jobs:
                   service: ${{ matrix.service }}
                   bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
                   test_requirements: "insights-behavioral-spec/requirements.txt"
-                  service_package: ${{ github.workspace }}/${{ matrix.repo }}
+                  service_package: ${{ matrix.service_package != '' && format('{0}/{1}', github.workspace, matrix.service_package) || '' }}
 
             - name: Archive Behave logs
               if: always()
