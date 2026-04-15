@@ -25,16 +25,20 @@ def get_parquet_factory_binary(environ):
 
     binary_path = Path(parquet_factory_binary)
     if binary_path.is_absolute():
-        return str(binary_path)
+        if binary_path.is_file() and os.access(binary_path, os.X_OK):
+            return str(binary_path)
+        raise FileNotFoundError(
+            f"Parquet Factory binary is not executable: {binary_path}"
+        )
 
     candidates = [
-        binary_path,
         Path.cwd() / binary_path,
-        Path(__file__).resolve().parent.parent / binary_path,
+        Path(__file__).resolve().parents[2] / binary_path,
+        Path(__file__).resolve().parents[1] / binary_path,
     ]
 
     for candidate in candidates:
-        if candidate.exists():
+        if candidate.is_file() and os.access(candidate, os.X_OK):
             return str(candidate)
 
     which_binary = shutil.which(parquet_factory_binary)
