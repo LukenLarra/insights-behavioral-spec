@@ -165,8 +165,14 @@ jobs:
                     echo "No build step found, skipping"
                   fi
 
+            - name: Create local symlink for BDD config paths
+              working-directory: insights-behavioral-spec/bdd-configs
+              run: |
+                  rm -f insights-behavioral-spec || true
+                  ln -s .. insights-behavioral-spec
+
             - name: Run BDD Framework
-              uses: LukenLarra/RedHat-BDD-Framework/actions/main@improve-test-reporting
+              uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
               with:
                   service: ${{ matrix.service }}
                   bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
