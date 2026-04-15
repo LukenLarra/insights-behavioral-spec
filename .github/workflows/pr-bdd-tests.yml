@@ -134,14 +134,7 @@ jobs:
               with:
                   go-version: "1.25"
 
-            - name: Prepare Go module
-              if: matrix.build_go
-              working-directory: ${{ matrix.repo }}
-              run: |
-                  if [ -f go.mod ]; then
-                    perl -pi -e 's/^go (\d+\.\d+)\.\d+$/go $1/' go.mod
-                    go mod tidy
-                  fi
+
 
             - name: Set up Python
               uses: actions/setup-python@v5
