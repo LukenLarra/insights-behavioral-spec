@@ -3,20 +3,48 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import tempfile
 import time
+from pathlib import Path
 from threading import Timer
 
 from behave import then, when
 from src import kafka_util
 from src.process_output import path_from_context
 
-# parquet-factory binary file name
-PARQUET_FACTORY_BINARY = os.environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
-
 # path do directory with rules results templates to be used
 DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
+
+
+def get_parquet_factory_binary(environ):
+    """Resolve Parquet Factory binary path from environment and locations."""
+    parquet_factory_binary = environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
+    parquet_factory_binary = os.path.expanduser(os.path.expandvars(parquet_factory_binary))
+
+    binary_path = Path(parquet_factory_binary)
+    if binary_path.is_absolute():
+        return str(binary_path)
+
+    candidates = [
+        binary_path,
+        Path.cwd() / binary_path,
+        Path(__file__).resolve().parent.parent / binary_path,
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+
+    which_binary = shutil.which(parquet_factory_binary)
+    if which_binary:
+        return which_binary
+
+    raise FileNotFoundError(
+        f"Parquet Factory binary not found: {parquet_factory_binary}. "
+        f"Searched: {', '.join(str(candidate) for candidate in candidates)}"
+    )
 
 
 @when('I set the environment variable "{env_name}" to "{env_value}"')
@@ -41,6 +69,8 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
         environ.update(context.parquet_environment)
     environ["PARQUET_FACTORY__LOGGING__DEBUG"] = "false"
 
+    parquet_factory_executable = get_parquet_factory_binary(environ)
+
     stdout_path = path_from_context(context, "parquet-factory", "stdout")
     stderr_path = path_from_context(context, "parquet-factory", "stderr")
 
@@ -51,7 +81,7 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
     context.add_cleanup(stderr_file.close)
 
     proc = subprocess.Popen(
-        [PARQUET_FACTORY_BINARY],
+        [parquet_factory_executable],
         stdout=stdout_file,
         stderr=stderr_file,
         env=environ,
