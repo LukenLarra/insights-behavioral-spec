@@ -3,11 +3,9 @@
 import json
 import logging
 import os
-import shutil
 import subprocess
 import tempfile
 import time
-from pathlib import Path
 from threading import Timer
 
 from behave import then, when
@@ -16,55 +14,6 @@ from src.process_output import path_from_context
 
 # path do directory with rules results templates to be used
 DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
-
-
-def get_parquet_factory_binary(environ):
-    """Resolve Parquet Factory binary path from environment and locations."""
-    parquet_factory_binary = environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
-    parquet_factory_binary = os.path.expanduser(os.path.expandvars(parquet_factory_binary))
-
-    binary_path = Path(parquet_factory_binary)
-    if binary_path.is_absolute():
-        if binary_path.is_file() and os.access(binary_path, os.X_OK):
-            return str(binary_path)
-        raise FileNotFoundError(
-            f"Parquet Factory binary is not executable: {binary_path}"
-        )
-
-    candidates = [
-        Path.cwd() / binary_path,
-        Path(__file__).resolve().parent / binary_path,
-    ]
-
-    resolved_file = Path(__file__).resolve()
-    for parent in resolved_file.parents:
-        candidates.append(parent / binary_path)
-
-    for candidate in candidates:
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
-
-    # Fallback: search recursively in the current workspace tree for executable file.
-    search_dirs = [Path.cwd(), Path(__file__).resolve().parent]
-    for parent in Path(__file__).resolve().parents:
-        search_dirs.append(parent)
-
-    for search_dir in search_dirs:
-        if not search_dir.exists():
-            continue
-        for candidate in search_dir.rglob(parquet_factory_binary):
-            if candidate.is_file() and os.access(candidate, os.X_OK):
-                return str(candidate)
-
-    which_binary = shutil.which(parquet_factory_binary)
-    if which_binary:
-        return which_binary
-
-    raise FileNotFoundError(
-        f"Parquet Factory binary not found: {parquet_factory_binary}. "
-        f"Searched: {', '.join(str(candidate) for candidate in candidates)}"
-    )
-
 
 @when('I set the environment variable "{env_name}" to "{env_value}"')
 def set_environment(context, env_name: str, env_value: str) -> None:

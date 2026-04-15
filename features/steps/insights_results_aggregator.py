@@ -15,10 +15,8 @@
 """Implementation of test steps that run Insights Results Aggregator and check its output."""
 
 import os
-import shutil
 import subprocess
 import time
-from pathlib import Path
 from subprocess import TimeoutExpired
 
 import requests
@@ -33,54 +31,6 @@ from src.utils import construct_rh_token, find_block, get_array_from_json
 
 # Insights Results Aggregator binary file name
 INSIGHTS_RESULTS_AGGREGATOR_BINARY = "insights-results-aggregator"
-
-
-def get_insights_results_aggregator_binary(environ=None):
-    """Resolve Insights Results Aggregator binary path from environment and locations."""
-    if environ is None:
-        environ = os.environ.copy()
-
-    binary_name = environ.get("PATH_TO_LOCAL_AGGREGATOR", INSIGHTS_RESULTS_AGGREGATOR_BINARY)
-    binary_name = os.path.expanduser(os.path.expandvars(binary_name))
-
-    binary_path = Path(binary_name)
-    if binary_path.is_absolute():
-        if binary_path.is_file() and os.access(binary_path, os.X_OK):
-            return str(binary_path)
-        raise FileNotFoundError(f"Insights Results Aggregator binary is not executable: {binary_path}")
-
-    candidates = [
-        Path.cwd() / binary_path,
-        Path(__file__).resolve().parent / binary_path,
-    ]
-
-    resolved_file = Path(__file__).resolve()
-    for parent in resolved_file.parents:
-        candidates.append(parent / binary_path)
-
-    for candidate in candidates:
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
-
-    search_dirs = [Path.cwd(), Path(__file__).resolve().parent]
-    for parent in Path(__file__).resolve().parents:
-        search_dirs.append(parent)
-
-    for search_dir in search_dirs:
-        if not search_dir.exists():
-            continue
-        for candidate in search_dir.rglob(binary_name):
-            if candidate.is_file() and os.access(candidate, os.X_OK):
-                return str(candidate)
-
-    which_binary = shutil.which(binary_name)
-    if which_binary:
-        return which_binary
-
-    raise FileNotFoundError(
-        f"Insights Results Aggregator binary not found: {binary_name}. "
-        f"Searched: {', '.join(str(candidate) for candidate in candidates)}"
-    )
 
 # time for newly started Insights Results Aggregator to setup connections and start HTTP server
 BREATH_TIME = 3
@@ -126,9 +76,8 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
 
 def start_aggregator(context, flag, environment):
     """Start Insights Results Aggregator with set up command line flags and env. variables."""
-    binary_path = get_insights_results_aggregator_binary(environment)
     out = subprocess.Popen(
-        [binary_path, flag],
+        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, flag],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environment,
@@ -216,10 +165,9 @@ def perform_aggregator_database_migration(context, version):
     """Perform aggregator database migration to selected version."""
     environ = os.environ.copy()
     environ["INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE"] = "dvo_recommendations"
-    binary_path = get_insights_results_aggregator_binary(environ)
     # run DVO migrations first to not mess with the OCP migrations output we're checking later
     out = subprocess.Popen(
-        [binary_path, "migrate", str(version)],
+        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
@@ -232,7 +180,7 @@ def perform_aggregator_database_migration(context, version):
 
     # run OCP migrations
     out = subprocess.Popen(
-        [binary_path, "migrate", str(version)],
+        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
@@ -272,9 +220,8 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    binary_path = get_insights_results_aggregator_binary(os.environ.copy())
     process = subprocess.Popen(
-        [binary_path],
+        [INSIGHTS_RESULTS_AGGREGATOR_BINARY],
         stdout=stdout_file,
         stderr=stderr_file,
         close_fds=True,
