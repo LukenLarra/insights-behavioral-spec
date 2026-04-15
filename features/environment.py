@@ -27,6 +27,8 @@ from subprocess import TimeoutExpired
 
 import psycopg2
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 # Mappings between supported features (like consuming message from Kafka) and
 # tags specified in feature files
 
@@ -50,14 +52,14 @@ FEATURES_WITH_MINIO = ("aggregator_exporter", "parquet_service")
 
 # Mapping between database name and script to cleanup such database.
 CLEANUP_FILES = {
-    "test": "setup/clean_aggregator_database.sql",
-    "notification": "setup/clean_notification_database.sql",
+    "test": PROJECT_ROOT / "setup" / "clean_aggregator_database.sql",
+    "notification": PROJECT_ROOT / "setup" / "clean_notification_database.sql",
 }
 
 # Mapping between database name and script to initialize such database.
 DB_INIT_FILES = {
-    "test": "setup/prepare_aggregator_database.sql",
-    "notification": "setup/prepare_notification_database.sql",
+    "test": PROJECT_ROOT / "setup" / "prepare_aggregator_database.sql",
+    "notification": PROJECT_ROOT / "setup" / "prepare_notification_database.sql",
 }
 
 
@@ -69,7 +71,7 @@ def before_all(context):
     context.database_user = os.getenv("DB_USER", "postgres")
     context.database_password = os.getenv("DB_PASS", "postgres")
     context.local = os.getenv("ENV_DOCKER", False) in ["0", False]
-    context.logs_dir = Path("logs").absolute()
+    context.logs_dir = PROJECT_ROOT / "logs"
 
     if not context.logs_dir.exists():
         context.logs_dir.mkdir(parents=True)
