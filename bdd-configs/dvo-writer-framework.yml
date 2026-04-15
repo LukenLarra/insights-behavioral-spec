@@ -2,6 +2,12 @@ project:
     name: "dvo-writer"
     version: "1.0.0"
 
+ci:
+    repo: "dvo-writer"
+    service: "dvo-writer"
+    docker_profile: "test-dvo-writer"
+    build_go: true
+
 tests:
     enabled: true
     path: "."

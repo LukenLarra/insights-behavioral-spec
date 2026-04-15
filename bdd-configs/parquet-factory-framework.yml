@@ -2,6 +2,12 @@ project:
     name: "parquet-factory"
     version: "1.0.0"
 
+ci:
+    repo: "parquet-factory"
+    service: "parquet-factory"
+    docker_profile: "test-parquet-factory"
+    build_go: true
+
 tests:
     enabled: true
     path: "."

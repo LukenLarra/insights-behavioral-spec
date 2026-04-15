@@ -2,6 +2,12 @@ project:
     name: "ccx-upgrades-data-eng"
     version: "1.0.0"
 
+ci:
+    repo: "ccx-upgrades-data-eng"
+    service: "data-engineering-service"
+    docker_profile: "test-upgrades-data-eng"
+    build_go: false
+
 tests:
     enabled: true
     path: "."

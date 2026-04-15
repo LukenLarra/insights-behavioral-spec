@@ -2,6 +2,12 @@ project:
     name: "insights-results-aggregator"
     version: "1.0.0"
 
+ci:
+    repo: "insights-results-aggregator"
+    service: "aggregator"
+    docker_profile: "test-aggregator"
+    build_go: true
+
 tests:
     enabled: true
     path: "."

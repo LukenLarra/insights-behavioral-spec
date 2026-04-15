@@ -1,4 +1,4 @@
-name: BDD Tests
+﻿name: BDD Tests
 
 on:
     push:
@@ -7,72 +7,99 @@ on:
     pull_request:
 
 jobs:
-    detect-changes:
+    generate-matrix:
         runs-on: ubuntu-latest
         outputs:
             matrix: ${{ steps.set-matrix.outputs.matrix }}
         steps:
             - uses: actions/checkout@v4
-            - uses: dorny/paths-filter@v3
-              id: filter
-              with:
-                  filters: |
-                      aggregator:
-                          - 'features/insights-results-aggregator/**'
-                          - 'bdd-configs/insights-results-aggregator-framework.yml'
-                          - 'config/insights_results_aggregator*'
-                          - 'features/steps/insights_results_aggregator.py'
-                          - 'features/steps/aggregator_*.py'
-                          - 'features/steps/common_aggregator.py'
-                      data_eng:
-                          - 'features/ccx-upgrades-data-eng/**'
-                          - 'bdd-configs/data-engineering-service-framework.yml'
-                          - 'config/ccx-upgrades-data-eng*'
-                          - 'features/steps/ccx_data_engineering_service.py'
-                          - 'features/steps/ccx_inference_service.py'
-
-                      parquet_factory:
-                          - 'features/parquet-factory/**'
-                          - 'bdd-configs/parquet-factory-framework.yml'
-                          - 'features/steps/parquet_*.py'
-                      global:
-                          - 'requirements.txt'
-                          - 'features/steps/common*.py'
-                          - 'features/steps/kafka*.py'
-                          - 'features/environment*.py'
-                          - 'src/**'
-                          - '.github/workflows/pr-bdd-tests.yml'
             - id: set-matrix
               run: |
-                  SERVICES="[]"
-                  if [[ "${{ steps.filter.outputs.global }}" == 'true' ]]; then
-                      SERVICES='[
-                          {"repo": "insights-results-aggregator", "service": "aggregator", "config": "insights-results-aggregator-framework.yml"},
-                          {"repo": "ccx-upgrades-data-eng", "service": "data-engineering-service", "config": "data-engineering-service-framework.yml"},
-                          {"repo": "parquet-factory", "service": "parquet-factory", "config": "parquet-factory-framework.yml"}
-                      ]'
-                  else
-                      if [[ "${{ steps.filter.outputs.aggregator }}" == 'true' ]]; then
-                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "insights-results-aggregator", "service": "aggregator", "config": "insights-results-aggregator-framework.yml"}]')
-                      fi
-                      if [[ "${{ steps.filter.outputs.data_eng }}" == 'true' ]]; then
-                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "ccx-upgrades-data-eng", "service": "data-engineering-service", "config": "data-engineering-service-framework.yml"}]')
-                      fi
-                      if [[ "${{ steps.filter.outputs.parquet_factory }}" == 'true' ]]; then
-                          SERVICES=$(echo "$SERVICES" | jq '. += [{"repo": "parquet-factory", "service": "parquet-factory", "config": "parquet-factory-framework.yml"}]')
-                      fi
-                  fi
-                  MATRIX="{\"include\": $(echo $SERVICES | jq -c .)}"
-                  echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+                  python3 - <<'PY'
+                  import glob
+                  import json
+                  import os
+                  import re
+
+                  services = []
+                  for file in glob.glob('bdd-configs/*-framework.yml'):
+                      with open(file, 'r', encoding='utf-8') as f:
+                          content = f.read()
+
+                      def extract(field):
+                          pattern = r'^\s*' + re.escape(field) + r'\s*:\s*(?:"([^"]+)"|\'([^\']+)\'|([^\s\n]+))'
+                          match = re.search(pattern, content, re.MULTILINE)
+                          if match:
+                              return match.group(1) or match.group(2) or match.group(3)
+                          return None
+
+                      repo = extract('repo')
+                      service = extract('service')
+                      if repo and service:
+                          services.append({
+                              'repo': repo,
+                              'service': service,
+                              'config': os.path.basename(file),
+                              'profile': extract('docker_profile') or '',
+                              'build_go': str(extract('build_go') or '').lower() == 'true'
+                          })
+
+                  matrix_json = json.dumps({'include': services})
+                  print(f"Generated matrix: {matrix_json}")
+                  with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+                      out.write(f"matrix={matrix_json}\n")
+                  PY
 
     bdd-tests:
-        needs: detect-changes
-        if: ${{ fromJson(needs.detect-changes.outputs.matrix).include[0] != null }}
+        needs: generate-matrix
+        if: ${{ fromJson(needs.generate-matrix.outputs.matrix).include[0] != null }}
         name: Test ${{ matrix.service }}
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
-            matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+            matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+        services:
+            kafka:
+                image: quay.io/ccxdev/kafka-no-zk:latest
+                ports:
+                    - 9092:9092
+                env:
+                    KAFKA_ADVERTISED_HOST_NAME: localhost
+                options: >-
+                    --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
+                    --health-interval 10s
+                    --health-timeout 10s
+                    --health-retries 10
+
+            database:
+                image: postgres:13.9
+                ports:
+                    - 5432:5432
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: test
+
+            minio:
+                image: quay.io/ccxdev/minio-server-ubi:latest
+                ports:
+                    - 9000:9000
+                env:
+                    MINIO_ACCESS_KEY: test_access_key
+                    MINIO_SECRET_KEY: test_secret_access_key
+                    PORT: 9000
+
+            pushgateway:
+                image: quay.io/ccxdev/prom-pushgateway-admin:latest
+                ports:
+                    - 9091:9091
+
+            mock-oauth2-server:
+                image: ghcr.io/navikt/mock-oauth2-server:2.2.1
+                ports:
+                    - 8081:8081
+                env:
+                    PORT: 8081
 
         steps:
             - name: Checkout behavioral spec repository
@@ -86,11 +113,21 @@ jobs:
                   repository: RedHatInsights/${{ matrix.repo }}
                   path: ${{ matrix.repo }}
 
+            - name: Install kcat
+              run: |
+                  sudo apt-get update -q
+                  sudo apt-get install -y kafkacat
+
+            - name: Add hosts entries
+              run: |
+                  echo "127.0.0.1 pushgateway" | sudo tee -a /etc/hosts
+                  echo "127.0.0.1 mock-oauth2-server" | sudo tee -a /etc/hosts
+
             - name: Set up Go
+              if: matrix.build_go
               uses: actions/setup-go@v5
               with:
                   go-version: "1.20"
-              if: matrix.repo == 'insights-results-aggregator' || matrix.repo == 'parquet-factory'
 
             - name: Set up Python
               uses: actions/setup-python@v5
@@ -101,20 +138,17 @@ jobs:
               working-directory: insights-behavioral-spec
               run: pip install -r requirements.txt
 
-            - name: Build service binary (Go services)
-              if: matrix.repo == 'insights-results-aggregator' || matrix.repo == 'parquet-factory'
+            - name: Build service binary
               working-directory: ${{ matrix.repo }}
-              run: make build
-
-            - name: Start infrastructure services
-              working-directory: insights-behavioral-spec
               run: |
-                  if [ "${{ matrix.service }}" == "aggregator" ]; then
-                    docker compose --profile test-aggregator up -d
-                  elif [ "${{ matrix.service }}" == "data-engineering-service" ]; then
-                    docker compose --profile test-upgrades-data-eng up -d
-                  elif [ "${{ matrix.service }}" == "parquet-factory" ]; then
-                    docker compose --profile test-parquet-factory up -d
+                  if [ -f "build.sh" ]; then
+                    echo "Found build.sh, running it"
+                    ./build.sh
+                  elif [ -f "Makefile" ] && grep -q "^build:" Makefile; then
+                    echo "Found Makefile with build target, running make build"
+                    make build
+                  else
+                    echo "No build step found, skipping"
                   fi
 
             - name: Run BDD Framework
@@ -132,15 +166,3 @@ jobs:
                   name: behave-logs-${{ matrix.service }}
                   path: insights-behavioral-spec/logs/
                   retention-days: 5
-
-            - name: Stop infrastructure services
-              if: always()
-              working-directory: insights-behavioral-spec
-              run: |
-                  if [ "${{ matrix.service }}" == "aggregator" ]; then
-                    docker compose --profile test-aggregator down -v
-                  elif [ "${{ matrix.service }}" == "data-engineering-service" ]; then
-                    docker compose --profile test-upgrades-data-eng down -v
-                  elif [ "${{ matrix.service }}" == "parquet-factory" ]; then
-                    docker compose --profile test-parquet-factory down -v
-                  fi
