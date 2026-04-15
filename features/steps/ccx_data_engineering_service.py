@@ -52,11 +52,27 @@ def start_ccx_upgrades_data_eng(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    data_eng_path = os.getenv("PATH_TO_LOCAL_DATA_ENG_SERVICE")
+    if not data_eng_path:
+        github_workspace = os.environ.get("GITHUB_WORKSPACE")
+        candidate_paths = [
+            os.path.join(os.getcwd(), "ccx-upgrades-data-eng"),
+            os.path.abspath(os.path.join(os.getcwd(), "..", "ccx-upgrades-data-eng")),
+        ]
+        if github_workspace:
+            candidate_paths.insert(0, os.path.join(github_workspace, "ccx-upgrades-data-eng"))
+
+        for candidate in candidate_paths:
+            if os.path.isdir(candidate):
+                data_eng_path = candidate
+                break
+
     popen = subprocess.Popen(
         params,
         stdout=stdout_file,
         stderr=stderr_file,
         env=env,
+        cwd=data_eng_path,
     )
     assert popen is not None
 

@@ -44,6 +44,18 @@ def get_parquet_factory_binary(environ):
         if candidate.is_file() and os.access(candidate, os.X_OK):
             return str(candidate)
 
+    # Fallback: search recursively in the current workspace tree for executable file.
+    search_dirs = [Path.cwd(), Path(__file__).resolve().parent]
+    for parent in Path(__file__).resolve().parents:
+        search_dirs.append(parent)
+
+    for search_dir in search_dirs:
+        if not search_dir.exists():
+            continue
+        for candidate in search_dir.rglob(parquet_factory_binary):
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return str(candidate)
+
     which_binary = shutil.which(parquet_factory_binary)
     if which_binary:
         return which_binary

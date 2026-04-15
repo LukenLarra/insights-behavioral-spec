@@ -36,7 +36,7 @@ def check_service_started(context, hostname, port, attempts=5, seconds_between_a
                 return
             else:
                 attempts -= 1
-        except requests.ConnectionError:
+        except requests.RequestException:
             attempts -= 1
     raise Exception(f"No service seem to be available at http://{hostname}:{port}")
 
