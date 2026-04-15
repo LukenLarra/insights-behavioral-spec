@@ -33,9 +33,12 @@ def get_parquet_factory_binary(environ):
 
     candidates = [
         Path.cwd() / binary_path,
-        Path(__file__).resolve().parents[2] / binary_path,
-        Path(__file__).resolve().parents[1] / binary_path,
+        Path(__file__).resolve().parent / binary_path,
     ]
+
+    resolved_file = Path(__file__).resolve()
+    for parent in resolved_file.parents:
+        candidates.append(parent / binary_path)
 
     for candidate in candidates:
         if candidate.is_file() and os.access(candidate, os.X_OK):
