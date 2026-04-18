@@ -14,6 +14,7 @@
 
 """Implementation of test steps that run DVO writer and check its output."""
 
+import os
 import subprocess
 import time
 from subprocess import TimeoutExpired
@@ -23,7 +24,7 @@ from dateutil import parser
 from src.process_output import path_from_context
 
 # DVO writer binary file name
-DVO_WRITER_BINARY = "insights-results-aggregator"
+DVO_WRITER_BINARY = os.environ.get("PATH_TO_LOCAL_DVO_WRITER", "insights-results-aggregator")
 
 # time for newly started DVO writer to setup connections
 BREATH_TIME = 3

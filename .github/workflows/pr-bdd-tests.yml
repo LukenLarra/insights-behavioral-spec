@@ -156,9 +156,15 @@ jobs:
                     echo "No build step found, skipping"
                   fi
 
-            - name: Add service binary to PATH
+            - name: Link service binary into spec directory
               if: matrix.build_go
-              run: echo "${{ github.workspace }}/${{ matrix.repo }}" >> $GITHUB_PATH
+              run: |
+                  for bin in insights-results-aggregator parquet-factory; do
+                      src="${{ github.workspace }}/${{ matrix.repo }}/$bin"
+                      if [ -f "$src" ]; then
+                          ln -sf "$src" "${{ github.workspace }}/insights-behavioral-spec/$bin"
+                      fi
+                  done
 
             - name: Create local symlink for BDD config paths
               working-directory: insights-behavioral-spec/bdd-configs

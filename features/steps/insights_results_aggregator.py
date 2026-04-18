@@ -30,7 +30,9 @@ from src.process_output import (
 from src.utils import construct_rh_token, find_block, get_array_from_json
 
 # Insights Results Aggregator binary file name
-INSIGHTS_RESULTS_AGGREGATOR_BINARY = "insights-results-aggregator"
+INSIGHTS_RESULTS_AGGREGATOR_BINARY = os.environ.get(
+    "PATH_TO_LOCAL_AGGREGATOR", "insights-results-aggregator"
+)
 
 # time for newly started Insights Results Aggregator to setup connections and start HTTP server
 BREATH_TIME = 3
