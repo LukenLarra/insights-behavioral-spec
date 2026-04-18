@@ -37,7 +37,7 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
         environ.update(context.parquet_environment)
     environ["PARQUET_FACTORY__LOGGING__DEBUG"] = "false"
 
-    parquet_factory_executable = get_parquet_factory_binary(environ)
+    parquet_factory_executable = environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
 
     stdout_path = path_from_context(context, "parquet-factory", "stdout")
     stderr_path = path_from_context(context, "parquet-factory", "stderr")

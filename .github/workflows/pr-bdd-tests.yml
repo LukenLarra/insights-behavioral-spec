@@ -156,6 +156,10 @@ jobs:
                     echo "No build step found, skipping"
                   fi
 
+            - name: Add service binary to PATH
+              if: matrix.build_go
+              run: echo "${{ github.workspace }}/${{ matrix.repo }}" >> $GITHUB_PATH
+
             - name: Create local symlink for BDD config paths
               working-directory: insights-behavioral-spec/bdd-configs
               run: |
