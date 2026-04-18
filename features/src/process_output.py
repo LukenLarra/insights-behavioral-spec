@@ -31,8 +31,9 @@ def path_from_context(context: Context, prefix: str = "", suffix: str = "", max_
 
     If the filepath is longer than $max_len, it's cropped.
     """
-    feature_name = context.feature.name.replace("/", "-")
-    scenario_name = context.scenario.name.replace("/", "-")
+    _invalid = r'"/:<>|*?\r\n'
+    feature_name = context.feature.name.translate(str.maketrans(_invalid, "-" * len(_invalid)))
+    scenario_name = context.scenario.name.translate(str.maketrans(_invalid, "-" * len(_invalid)))
 
     filename = f"{feature_name}_{scenario_name}"
 
