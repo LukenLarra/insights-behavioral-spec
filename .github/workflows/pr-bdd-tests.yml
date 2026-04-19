@@ -206,6 +206,15 @@ jobs:
                               gh_env.write(f"{key}={os.path.join(spec_dir, value[2:])}\n")
                   PY
 
+            - name: Debug binary and env vars
+              run: |
+                  echo "=== Binary links in spec dir ==="
+                  ls -la "${{ github.workspace }}/insights-behavioral-spec/" | grep -E 'aggregator|parquet|dvo' || echo "No binary links found"
+                  echo "=== PATH_TO_LOCAL_* env vars ==="
+                  env | grep PATH_TO_LOCAL || echo "No PATH_TO_LOCAL vars set"
+                  echo "=== PARQUET_FACTORY_BIN ==="
+                  echo "${PARQUET_FACTORY_BIN:-not set}"
+
             - name: Run BDD Framework
               uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
               with:
