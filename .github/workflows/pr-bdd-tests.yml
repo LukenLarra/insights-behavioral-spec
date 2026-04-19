@@ -165,6 +165,7 @@ jobs:
                           ln -sf "$src" "${{ github.workspace }}/insights-behavioral-spec/$bin"
                       fi
                   done
+                  echo "${{ github.workspace }}/insights-behavioral-spec" >> $GITHUB_PATH
 
             - name: Create local symlink for BDD config paths
               working-directory: insights-behavioral-spec/bdd-configs
