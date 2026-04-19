@@ -172,10 +172,39 @@ jobs:
               run: |
                   rm -f insights-behavioral-spec || true
                   ln -s .. insights-behavioral-spec
-                  if [ -f "../parquet-factory" ]; then
-                      rm -f parquet-factory || true
-                      ln -s ../parquet-factory parquet-factory
-                  fi
+
+            - name: Resolve local binary paths from BDD config
+              run: |
+                  python3 - <<'PY'
+                  import os, re
+
+                  workspace = os.environ["GITHUB_WORKSPACE"]
+                  spec_dir = os.path.join(workspace, "insights-behavioral-spec")
+                  config_path = os.path.join(spec_dir, "bdd-configs", "${{ matrix.config }}")
+
+                  with open(config_path) as f:
+                      content = f.read()
+
+                  in_env_block = False
+                  entries = {}
+                  for line in content.splitlines():
+                      if re.match(r"^\s{4}env\s*:", line):
+                          in_env_block = True
+                          continue
+                      if in_env_block:
+                          m = re.match(r"^\s{8}(\w+)\s*:\s*[\"']?([^\"'\n]+)[\"']?", line)
+                          if m:
+                              entries[m.group(1)] = m.group(2).strip()
+                          elif line.strip() and not line.startswith(" " * 8):
+                              break
+
+                  with open(os.environ["GITHUB_ENV"], "a") as gh_env:
+                      for key, value in entries.items():
+                          if value.startswith("insights-behavioral-spec/"):
+                              gh_env.write(f"{key}={os.path.join(workspace, value)}\n")
+                          elif value.startswith("./"):
+                              gh_env.write(f"{key}={os.path.join(spec_dir, value[2:])}\n")
+                  PY
 
             - name: Run BDD Framework
               uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
