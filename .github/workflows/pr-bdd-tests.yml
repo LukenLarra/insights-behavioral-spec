@@ -171,6 +171,10 @@ jobs:
               run: |
                   rm -f insights-behavioral-spec || true
                   ln -s .. insights-behavioral-spec
+                  if [ -f "../parquet-factory" ]; then
+                      rm -f parquet-factory || true
+                      ln -s ../parquet-factory parquet-factory
+                  fi
 
             - name: Run BDD Framework
               uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
