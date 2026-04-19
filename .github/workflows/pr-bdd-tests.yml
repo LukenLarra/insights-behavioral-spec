@@ -210,6 +210,8 @@ jobs:
               run: |
                   echo "=== Binary links in spec dir ==="
                   ls -la "${{ github.workspace }}/insights-behavioral-spec/" | grep -E 'aggregator|parquet|dvo' || echo "No binary links found"
+                  echo "=== Executables in service repo ==="
+                  find "${{ github.workspace }}/${{ matrix.repo }}" -maxdepth 2 -type f -executable | grep -v '\.sh$' || echo "No executables found"
                   echo "=== PATH_TO_LOCAL_* env vars ==="
                   env | grep PATH_TO_LOCAL || echo "No PATH_TO_LOCAL vars set"
                   echo "=== PARQUET_FACTORY_BIN ==="

@@ -41,3 +41,4 @@ tests:
         KAFKA_HOST: "localhost"
         KAFKA_PORT: "9092"
         PATH_TO_LOCAL_DVO_WRITER: "insights-behavioral-spec/insights-results-aggregator"
+        PATH_TO_LOCAL_AGGREGATOR: "insights-behavioral-spec/insights-results-aggregator"
