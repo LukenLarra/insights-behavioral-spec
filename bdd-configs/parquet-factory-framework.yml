@@ -11,7 +11,7 @@ ci:
 tests:
     enabled: true
     path: "."
-    command: "python -m behave insights-behavioral-spec/features/parquet-factory/parquet_files.feature --junit --junit-directory reports/junit --format pretty"
+    command: "python -m behave @insights-behavioral-spec/test_list/parquet_factory.txt --junit --junit-directory reports/junit --format pretty"
     bdd:
         features: "insights-behavioral-spec/features/parquet-factory"
         steps: "insights-behavioral-spec/features/steps"
