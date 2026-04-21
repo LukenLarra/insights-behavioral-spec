@@ -16,12 +16,24 @@
 
 import os
 import subprocess
-import time
 import sys
 
 from behave import given, when
 from common_http import check_service_started
 from src.process_output import path_from_context
+
+
+def _terminate_process(process: subprocess.Popen) -> None:
+    """Terminate a subprocess and wait until it is fully stopped."""
+    if process.poll() is not None:
+        return
+
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
 
 
 @given("The CCX Inference Service is running on port {port:d}")
@@ -43,7 +55,7 @@ def start_ccx_inference_service(context, port):
     assert popen is not None
 
     check_service_started(context, "localhost", port, seconds_between_attempts=1)
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
 
 
 @given("The mock CCX Inference Service is running on port {port:d}")
@@ -76,13 +88,10 @@ def start_ccx_inference_mock_service(context, port):
     assert popen is not None
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
 
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
     context.mock_inference = popen
 
 @when("I stop the mock CCX Inference Service")
 def stop_ccx_inference_mock_service(context):
     """Stop mocked inference service."""
-    context.mock_inference.terminate()
-    while context.mock_inference.poll() is None:
-        # subprocess is still alive
-        time.sleep(0.1)
+    _terminate_process(context.mock_inference)

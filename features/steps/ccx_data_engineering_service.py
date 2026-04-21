@@ -16,13 +16,25 @@
 
 import os
 import subprocess
-import time
 import sys
 
 import requests
 from behave import given, when
 from common_http import check_service_started
 from src.process_output import path_from_context
+
+
+def _terminate_process(process: subprocess.Popen) -> None:
+    """Terminate a subprocess and wait until it is fully stopped."""
+    if process.poll() is not None:
+        return
+
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
 
 
 @given("The CCX Data Engineering Service is running on port {port:d} with envs")
@@ -84,7 +96,7 @@ def start_ccx_upgrades_data_eng(context, port):
             f"--- STDERR ---\n{stderr_path.read_text()}"
         )
         raise Exception(f"No service seem to be available at http://localhost:{port}\n{logs}")
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
 
 
 @given("The mock RHOBS Service is running on port {port:d}")
@@ -124,7 +136,7 @@ def start_rhobs_mock_service(context, port):
 
     # time.sleep(0.5)
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
     context.mock_rhobs = popen
     context.mock_rhobs_port = port
 
@@ -132,10 +144,7 @@ def start_rhobs_mock_service(context, port):
 @when("I stop the mock RHOBS Service")
 def stop_rhobs_mock_service(context):
     """Stop mocked RHOBS service."""
-    context.mock_rhobs.terminate()
-    while context.mock_rhobs.poll() is None:
-        # subprocess is still alive
-        time.sleep(0.1)
+    _terminate_process(context.mock_rhobs)
 
 
 @when("The mock RHOBS Service doesn't find the queried clusters")
