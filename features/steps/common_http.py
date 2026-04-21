@@ -116,7 +116,9 @@ def request_endpoint(context, endpoint, hostname, port):
 @then("The status code of the response is {status:d}")
 def check_status_code(context, status):
     """Check the HTTP status code for latest response from tested service."""
-    assert context.response.status_code == status, f"Status code is {context.response.status_code}"
+    assert context.response.status_code == status, (
+        f"Status code is {context.response.status_code}, body: {context.response.text[:2000]}"
+    )
 
 
 @then("The body of the response has the following schema")
