@@ -76,7 +76,14 @@ def start_ccx_upgrades_data_eng(context, port):
     )
     assert popen is not None
 
-    check_service_started(context, "localhost", port, attempts=10)
+    try:
+        check_service_started(context, "localhost", port, attempts=15, seconds_between_attempts=1)
+    except Exception:
+        logs = (
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n"
+            f"--- STDERR ---\n{stderr_path.read_text()}"
+        )
+        raise Exception(f"No service seem to be available at http://localhost:{port}\n{logs}")
     context.add_cleanup(popen.terminate)
 
 
