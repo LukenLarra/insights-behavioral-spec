@@ -40,13 +40,15 @@ jobs:
                       service = extract('service')
                       if repo and service:
                           build_go = str(extract('build_go') or '').lower() == 'true'
+                          binary_repo = extract('binary_repo') or ''
                           services.append({
                               'repo': repo,
                               'service': service,
                               'config': os.path.basename(file),
                               'profile': extract('docker_profile') or '',
                               'build_go': build_go,
-                              'service_package': '' if build_go else repo
+                              'service_package': '' if build_go else repo,
+                              'binary_repo': binary_repo
                           })
 
                   matrix_json = json.dumps({'include': services})
@@ -118,6 +120,13 @@ jobs:
                   repository: RedHatInsights/${{ matrix.repo }}
                   path: ${{ matrix.repo }}
 
+            - name: Checkout binary repository
+              if: matrix.binary_repo != ''
+              uses: actions/checkout@v4
+              with:
+                  repository: RedHatInsights/${{ matrix.binary_repo }}
+                  path: ${{ matrix.binary_repo }}
+
             - name: Install kcat
               run: |
                   sudo apt-get update -q
@@ -144,23 +153,24 @@ jobs:
               run: pip install -r requirements.txt
 
             - name: Build service binary
-              working-directory: ${{ matrix.repo }}
               run: |
-                  if [ -f "build.sh" ]; then
-                    echo "Found build.sh, running it"
-                    ./build.sh
-                  elif [ -f "Makefile" ] && grep -q "^build:" Makefile; then
-                    echo "Found Makefile with build target, running make build"
-                    make build
+                  build_dir="${{ matrix.binary_repo != '' && matrix.binary_repo || matrix.repo }}"
+                  if [ -f "$build_dir/build.sh" ]; then
+                    echo "Found build.sh in $build_dir, running it"
+                    (cd "$build_dir" && ./build.sh)
+                  elif [ -f "$build_dir/Makefile" ] && grep -q "^build:" "$build_dir/Makefile"; then
+                    echo "Found Makefile with build target in $build_dir, running make build"
+                    (cd "$build_dir" && make build)
                   else
-                    echo "No build step found, skipping"
+                    echo "No build step found in $build_dir, skipping"
                   fi
 
             - name: Link service binary into spec directory
               if: matrix.build_go
               run: |
+                  build_dir="${{ matrix.binary_repo != '' && matrix.binary_repo || matrix.repo }}"
                   for bin in insights-results-aggregator parquet-factory; do
-                      src="${{ github.workspace }}/${{ matrix.repo }}/$bin"
+                      src="${{ github.workspace }}/$build_dir/$bin"
                       if [ -f "$src" ]; then
                           ln -sf "$src" "${{ github.workspace }}/insights-behavioral-spec/$bin"
                       fi
