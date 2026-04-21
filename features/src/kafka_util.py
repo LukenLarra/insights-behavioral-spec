@@ -14,6 +14,8 @@
 
 """An interface to Apache Kafka done using kcat utility and Python interface to Kafka."""
 
+import time
+
 from behave.runner import Context
 from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer
 from kafka.admin import NewTopic
@@ -29,7 +31,7 @@ class SendEventError(Exception):
 
 
 def create_topic(hostname, topic_name, partitions=1):
-    """Create a new Kafka topic."""
+    """Create a new Kafka topic and wait until all partitions are visible."""
     topic = NewTopic(topic_name, partitions, 1)
     admin_client = KafkaAdminClient(bootstrap_servers=hostname)
     try:
@@ -37,6 +39,20 @@ def create_topic(hostname, topic_name, partitions=1):
         assert outcome.topic_errors[0][1] == 0, "Topic creation failure: {outcome}"
     except TopicAlreadyExistsError:
         print(f"{topic_name} topic already exists")
+
+    # Wait until the producer metadata reflects all expected partitions.
+    # Topic creation is asynchronous and metadata may lag behind by a moment.
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        producer = KafkaProducer(bootstrap_servers=hostname)
+        visible = producer.partitions_for(topic_name) or set()
+        producer.close()
+        if len(visible) >= partitions:
+            return
+        time.sleep(0.5)
+    raise RuntimeError(
+        f"Timed out waiting for {topic_name} to have {partitions} partition(s)"
+    )
 
 
 def delete_topic(context: Context, topic: str):

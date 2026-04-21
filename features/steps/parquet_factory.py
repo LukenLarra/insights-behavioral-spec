@@ -38,8 +38,8 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
     environ["PARQUET_FACTORY__LOGGING__DEBUG"] = "false"
 
     parquet_factory_executable = environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
-    real_binary = os.path.realpath(parquet_factory_executable)
-    binary_cwd = os.path.dirname(real_binary)
+    #real_binary = os.path.realpath(parquet_factory_executable)
+    #binary_cwd = os.path.dirname(real_binary)
 
     stdout_path = path_from_context(context, "parquet-factory", "stdout")
     stderr_path = path_from_context(context, "parquet-factory", "stderr")
@@ -51,11 +51,10 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
     context.add_cleanup(stderr_file.close)
 
     proc = subprocess.Popen(
-        [real_binary],
+        [parquet_factory_executable],
         stdout=stdout_file,
         stderr=stderr_file,
         env=environ,
-        cwd=binary_cwd,
     )
 
     print(f"timer will run for {timeout_sec}")
