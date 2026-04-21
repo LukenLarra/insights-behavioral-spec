@@ -222,12 +222,16 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
+
     process = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY],
+        [real_binary],
         stdout=stdout_file,
         stderr=stderr_file,
         close_fds=True,
         bufsize=0,
+        cwd=binary_cwd,
     )
     # background process -> we can't communicate() with it
 
@@ -240,7 +244,12 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(process.terminate)
 
     # check if process has been started
-    assert process.poll() is None, "Insights Results Aggregator immediatelly finished!"
+    if process.poll() is not None:
+        logs = (
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n"
+            f"--- STDERR ---\n{stderr_path.read_text()}"
+        )
+        raise AssertionError(f"Insights Results Aggregator immediatelly finished!\n{logs}")
 
     # store process instance for later use
     context.aggregator_process = process
