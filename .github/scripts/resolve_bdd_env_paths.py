@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Resolve relative paths in a BDD config's env block to absolute paths and
-write them to $GITHUB_ENV so subsequent workflow steps can use them."""
+"""Resolve relative paths in a BDD config's env block to absolute paths.
+
+Writes resolved values to $GITHUB_ENV for subsequent workflow steps, and
+patches the config file in-place so downstream actions (e.g. the BDD
+Framework) also receive the absolute paths instead of the raw relative ones.
+"""
 
 import os
 import sys
@@ -30,6 +34,7 @@ def main() -> None:
 
     entries = (config.get("tests") or {}).get("env") or {}
 
+    patched = False
     with open(os.environ["GITHUB_ENV"], "a") as gh_env:
         for key, raw_value in entries.items():
             resolved = resolve(workspace, spec_dir, str(raw_value))
@@ -40,6 +45,13 @@ def main() -> None:
             else:
                 print(f"Resolved {key}={resolved}")
             gh_env.write(f"{key}={resolved}\n")
+            config["tests"]["env"][key] = resolved
+            patched = True
+
+    if patched:
+        with open(config_path, "w") as f:
+            yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
+        print(f"Patched config written to {config_path}")
 
 
 if __name__ == "__main__":
