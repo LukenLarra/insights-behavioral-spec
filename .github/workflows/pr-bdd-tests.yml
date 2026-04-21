@@ -187,17 +187,6 @@ jobs:
                     "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
               working-directory: ${{ github.workspace }}/insights-behavioral-spec
 
-            - name: Debug binary and env vars
-              run: |
-                  echo "=== Binary links in spec dir ==="
-                  ls -la "${{ github.workspace }}/insights-behavioral-spec/" | grep -E 'aggregator|parquet|dvo' || echo "No binary links found"
-                  echo "=== Executables in service repo ==="
-                  find "${{ github.workspace }}/${{ matrix.repo }}" -maxdepth 2 -type f -executable | grep -v '\.sh$' || echo "No executables found"
-                  echo "=== PATH_TO_LOCAL_* env vars ==="
-                  env | grep PATH_TO_LOCAL || echo "No PATH_TO_LOCAL vars set"
-                  echo "=== PARQUET_FACTORY_BIN ==="
-                  echo "${PARQUET_FACTORY_BIN:-not set}"
-
             - name: Run BDD Framework
               uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
               with:
@@ -212,15 +201,6 @@ jobs:
               with:
                   name: bdd-test-reports-${{ matrix.service }}
                   path: reports/junit/*.xml
-                  retention-days: 5
-
-            - name: Upload service logs
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: bdd-service-logs-${{ matrix.service }}
-                  path: insights-behavioral-spec/logs/
-                  if-no-files-found: ignore
                   retention-days: 5
 
     publish_report:
