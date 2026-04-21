@@ -169,11 +169,9 @@ jobs:
               if: matrix.build_go
               run: |
                   build_dir="${{ matrix.binary_repo != '' && matrix.binary_repo || matrix.repo }}"
-                  for bin in insights-results-aggregator parquet-factory; do
-                      src="${{ github.workspace }}/$build_dir/$bin"
-                      if [ -f "$src" ]; then
-                          ln -sf "$src" "${{ github.workspace }}/insights-behavioral-spec/$bin"
-                      fi
+                  find "${{ github.workspace }}/$build_dir" -maxdepth 1 -type f -executable | while read -r bin; do
+                      ln -sf "$bin" "${{ github.workspace }}/insights-behavioral-spec/$(basename "$bin")"
+                      echo "Linked $(basename "$bin") into spec dir"
                   done
                   echo "${{ github.workspace }}/insights-behavioral-spec" >> $GITHUB_PATH
 
@@ -185,36 +183,9 @@ jobs:
 
             - name: Resolve local binary paths from BDD config
               run: |
-                  python3 - <<'PY'
-                  import os, re
-
-                  workspace = os.environ["GITHUB_WORKSPACE"]
-                  spec_dir = os.path.join(workspace, "insights-behavioral-spec")
-                  config_path = os.path.join(spec_dir, "bdd-configs", "${{ matrix.config }}")
-
-                  with open(config_path) as f:
-                      content = f.read()
-
-                  in_env_block = False
-                  entries = {}
-                  for line in content.splitlines():
-                      if re.match(r"^\s{4}env\s*:", line):
-                          in_env_block = True
-                          continue
-                      if in_env_block:
-                          m = re.match(r"^\s{8}(\w+)\s*:\s*[\"']?([^\"'\n]+)[\"']?", line)
-                          if m:
-                              entries[m.group(1)] = m.group(2).strip()
-                          elif line.strip() and not line.startswith(" " * 8):
-                              break
-
-                  with open(os.environ["GITHUB_ENV"], "a") as gh_env:
-                      for key, value in entries.items():
-                          if value.startswith("insights-behavioral-spec/"):
-                              gh_env.write(f"{key}={os.path.join(workspace, value)}\n")
-                          elif value.startswith("./"):
-                              gh_env.write(f"{key}={os.path.join(spec_dir, value[2:])}\n")
-                  PY
+                  python3 .github/scripts/resolve_bdd_env_paths.py \
+                    "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
+              working-directory: ${{ github.workspace }}/insights-behavioral-spec
 
             - name: Debug binary and env vars
               run: |
@@ -235,10 +206,32 @@ jobs:
                   test_requirements: "insights-behavioral-spec/requirements.txt"
                   service_package: ${{ matrix.service_package != '' && format('{0}/{1}', github.workspace, matrix.service_package) || '' }}
 
-            - name: Archive Behave logs
+            - name: Upload test reports
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: behave-logs-${{ matrix.service }}
-                  path: insights-behavioral-spec/logs/
+                  name: bdd-test-reports-${{ matrix.service }}
+                  path: reports/junit/*.xml
                   retention-days: 5
+
+    publish_report:
+        name: Publish Test Results
+        needs: bdd-tests
+        runs-on: ubuntu-latest
+        if: ${{ always() }}
+        permissions:
+            contents: read
+            checks: write
+            pull-requests: write
+        steps:
+            - name: Download partial reports
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: bdd-test-reports-*
+                  path: reports/junit
+                  merge-multiple: true
+
+            - name: Publish merged test results
+              uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
+              with:
+                  report_path: "reports/junit/*.xml"
