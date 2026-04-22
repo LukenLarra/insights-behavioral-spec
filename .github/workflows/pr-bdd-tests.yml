@@ -17,48 +17,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - id: set-matrix
-        run: |
-          python3 - <<'PY'
-          import glob, json, os, re
-
-          services = []
-          for file in glob.glob('bdd-configs/*-framework.yml'):
-              with open(file, 'r', encoding='utf-8') as f:
-                  content = f.read()
-
-              def extract(field):
-                  pattern = r'^\s*' + re.escape(field) + r'\s*:\s*(?:"([^"]+)"|\'([^\']+)\'|([^\s\n]+))'
-                  match = re.search(pattern, content, re.MULTILINE)
-                  if match:
-                      return match.group(1) or match.group(2) or match.group(3)
-                  return None
-
-              repo = extract('repo')
-              service = extract('service')
-
-              if repo and service:
-                  build_go = str(extract('build_go') or '').lower() == 'true'
-                  binary_repo = extract('binary_repo') or ''
-
-                  services.append({
-                      'repo': repo,
-                      'service': service,
-                      'config': os.path.basename(file),
-                      'profile': extract('docker_profile') or '',
-                      'build_go': build_go,
-                      'service_package': '' if build_go else repo,
-                      'binary_repo': binary_repo
-                  })
-
-          matrix_json = json.dumps({'include': services})
-          has_services = 'true' if services else 'false'
-
-          print(f"Generated matrix: {matrix_json}")
-
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
-              out.write(f"matrix={matrix_json}\n")
-              out.write(f"has_services={has_services}\n")
-          PY
+        run: python3 .github/scripts/generate_matrix.py
 
   bdd-tests:
     needs: generate-matrix
@@ -230,17 +189,8 @@ jobs:
           path: reports/junit
           merge-multiple: true
 
-      - name: Debug list reports
-        run: |
-          echo "=== Reports found ==="
-          ls -R reports || echo "No reports directory"
-
       - name: Publish merged test results
         if: ${{ hashFiles('reports/junit/*.xml') != '' }}
         uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
         with:
           report_path: "reports/junit/*.xml"
-
-      - name: No reports found
-        if: ${{ hashFiles('reports/junit/*.xml') == '' }}
-        run: echo "No test reports found, skipping publish step"
