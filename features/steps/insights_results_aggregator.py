@@ -145,6 +145,9 @@ The commands are:
     # filter message that can be printed by GOCOVERAGE machinery
     stdout = filter_coverage_message(stdout)
 
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    stdout = stdout.replace(real_binary, os.path.basename(real_binary))
+
     # check if the output contains expected help message
     # any optional garbage above and below help message is ignored
     assert expected_output.strip() in stdout.strip(), f"{stdout} != {expected_output}"
