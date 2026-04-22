@@ -189,16 +189,9 @@ jobs:
 
             - name: Free ports declared in BDD config
               run: |
-                  ports=$(python3 -c "
-                  import re
-                  with open('${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}') as f:
-                      m = re.search(r'free_ports\s*:\s*[\"\'']?([0-9, ]+)[\"\'']?', f.read())
-                  print(m.group(1).replace(',', ' ') if m else '')
-                  ")
-                  for port in \$ports; do
-                      fuser -k \${port}/tcp || true
-                      echo "Freed port \$port"
-                  done
+                  python3 .github/scripts/free_bdd_ports.py \
+                    "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
+              working-directory: ${{ github.workspace }}/insights-behavioral-spec
 
             - name: Run BDD Framework
               uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
