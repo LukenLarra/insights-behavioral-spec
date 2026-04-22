@@ -160,28 +160,19 @@ jobs:
           bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
           test_requirements: "insights-behavioral-spec/requirements.txt"
           service_package: ${{ matrix.service_package != '' && format('{0}/{1}', github.workspace, matrix.service_package) || '' }}
-          artifact_name_suffix: "-job-${{ strategy.job-index }}" 
+          artifact_name_suffix: "-job-${{ strategy.job-index }}"
 
-  publish_report:
-    name: Publish Test Results
-    needs: bdd-tests
+  publish-reports:
+    needs: [generate-matrix, bdd-tests]
+    if: always() && needs.bdd-tests.result != 'skipped'
     runs-on: ubuntu-latest
-    if: ${{ always() }}
-    permissions:
-      contents: read
-      checks: write
-      pull-requests: write
-
     steps:
-      - name: Download reports
+      - name: Download all test reports
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
           pattern: bdd-test-reports-*
           path: reports/junit
+          merge-multiple: true
 
-      - name: Publish merged test results
-        if: ${{ hashFiles('reports/junit/**/*.xml') != '' }}
+      - name: Publish BDD reports
         uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
-        with:
-          report_path: "reports/junit/**/*.xml"
