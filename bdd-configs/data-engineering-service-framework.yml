@@ -7,7 +7,7 @@ ci:
     service: "data-engineering-service"
     docker_profile: "test-upgrades-data-eng"
     build_go: false
-    free_ports: "9091"
+    free_ports: 9091
 
 tests:
     enabled: true

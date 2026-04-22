@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """Free ports listed in the free_ports field of a BDD config YAML."""
 
-import re
 import subprocess
 import sys
+
+import yaml
 
 
 def get_free_ports(config_path: str) -> list[str]:
     with open(config_path) as f:
-        content = f.read()
-    match = re.search(r"free_ports\s*:\s*([0-9, ]+)", content)
-    if not match:
+        config = yaml.safe_load(f)
+    value = (config.get("ci") or {}).get("free_ports")
+    if not value:
         return []
-    return match.group(1).replace(",", " ").split()
+    return str(value).replace(",", " ").split()
 
 
 def stop_docker_containers_on_port(port: str) -> bool:
