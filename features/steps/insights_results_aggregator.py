@@ -15,6 +15,7 @@
 """Implementation of test steps that run Insights Results Aggregator and check its output."""
 
 import os
+import shutil
 import subprocess
 import time
 from subprocess import TimeoutExpired
@@ -33,6 +34,18 @@ from src.utils import construct_rh_token, find_block, get_array_from_json
 INSIGHTS_RESULTS_AGGREGATOR_BINARY = os.environ.get(
     "PATH_TO_LOCAL_AGGREGATOR", "insights-results-aggregator"
 )
+
+def _resolve_binary(binary: str) -> str:
+    """Return the real path of the binary, following symlinks.
+
+    Handles three cases: absolute path, relative path that exists from CWD,
+    and bare/relative name that must be looked up on PATH.
+    """
+    if os.path.isabs(binary) or os.path.exists(binary):
+        return os.path.realpath(binary)
+    found = shutil.which(os.path.basename(binary))
+    return os.path.realpath(found if found else binary)
+
 
 # time for newly started Insights Results Aggregator to setup connections and start HTTP server
 BREATH_TIME = 3
@@ -78,7 +91,7 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
 
 def start_aggregator(context, flag, environment):
     """Start Insights Results Aggregator with set up command line flags and env. variables."""
-    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
     binary_cwd = os.path.dirname(real_binary)
     out = subprocess.Popen(
         [real_binary, flag],
@@ -168,7 +181,7 @@ def check_actual_configuration_for_aggregator(context):
 @when("I migrate aggregator database to version #{version:n}")
 def perform_aggregator_database_migration(context, version):
     """Perform aggregator database migration to selected version."""
-    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
     binary_cwd = os.path.dirname(real_binary)
     environ = os.environ.copy()
     environ["INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE"] = "dvo_recommendations"
@@ -229,7 +242,7 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
-    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
     binary_cwd = os.path.dirname(real_binary)
 
     process = subprocess.Popen(
