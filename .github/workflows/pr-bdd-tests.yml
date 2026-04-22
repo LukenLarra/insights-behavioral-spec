@@ -179,10 +179,9 @@ jobs:
         with:
           pattern: bdd-test-reports-*
           path: reports/junit
-          merge-multiple: true
 
       - name: Publish merged test results
-        if: ${{ hashFiles('reports/junit/*.xml') != '' }}
+        if: ${{ hashFiles('reports/junit/**/*.xml') != '' }}
         uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
         with:
-          report_path: "reports/junit/*.xml"
+          report_path: "reports/junit/**/*.xml"

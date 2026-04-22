@@ -84,8 +84,7 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
         if not hasattr(context, "no_IRA_environment")
         else context.no_IRA_environment
     )
-    # add new environment variable into environments
-    environment["INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"] = config
+    environment["INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"] = os.path.abspath(config)
     start_aggregator(context, flag, environment)
 
 
