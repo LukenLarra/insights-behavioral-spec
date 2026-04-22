@@ -160,15 +160,7 @@ jobs:
           bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
           test_requirements: "insights-behavioral-spec/requirements.txt"
           service_package: ${{ matrix.service_package != '' && format('{0}/{1}', github.workspace, matrix.service_package) || '' }}
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: bdd-test-reports-${{ matrix.service }}-${{ strategy.job-index }}-${{ github.run_id }}
-          path: reports/junit/*.xml
-          retention-days: 5
-          if-no-files-found: warn
+          artifact_name_suffix: "-job-${{ strategy.job-index }}" 
 
   publish_report:
     name: Publish Test Results
