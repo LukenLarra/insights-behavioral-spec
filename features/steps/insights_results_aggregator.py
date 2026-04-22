@@ -51,7 +51,7 @@ def _resolve_binary(binary: str) -> str:
 BREATH_TIME = 3
 
 # path do directory with rules results to be send into Insights Results Aggregator
-DATA_DIRECTORY = "test_data"
+DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
 
 # REST API access timeout
 TIMEOUT = 5000
