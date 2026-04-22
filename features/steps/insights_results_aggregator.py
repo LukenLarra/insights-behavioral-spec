@@ -78,11 +78,14 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
 
 def start_aggregator(context, flag, environment):
     """Start Insights Results Aggregator with set up command line flags and env. variables."""
+    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, flag],
+        [real_binary, flag],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environment,
+        cwd=binary_cwd,
     )
 
     # check if subprocess has been started and its output caught
@@ -165,14 +168,17 @@ def check_actual_configuration_for_aggregator(context):
 @when("I migrate aggregator database to version #{version:n}")
 def perform_aggregator_database_migration(context, version):
     """Perform aggregator database migration to selected version."""
+    real_binary = os.path.realpath(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
     environ = os.environ.copy()
     environ["INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE"] = "dvo_recommendations"
     # run DVO migrations first to not mess with the OCP migrations output we're checking later
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
+        [real_binary, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
+        cwd=binary_cwd,
     )
 
     # check if subprocess has been started and its output caught
@@ -182,10 +188,11 @@ def perform_aggregator_database_migration(context, version):
 
     # run OCP migrations
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
+        [real_binary, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
+        cwd=binary_cwd,
     )
 
     assert out is not None
