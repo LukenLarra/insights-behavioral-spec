@@ -182,8 +182,6 @@ jobs:
                   ln -s .. insights-behavioral-spec
                   rm -f config || true
                   ln -s ../config config
-                  rm -f test_data || true
-                  ln -s ../test_data test_data
 
             - name: Resolve local binary paths from BDD config
               run: |
@@ -227,7 +225,7 @@ jobs:
               uses: actions/download-artifact@v4
               with:
                   pattern: bdd-test-reports-*
-                  path: .
+                  path: reports/junit
                   merge-multiple: true
 
             - name: Publish merged test results
