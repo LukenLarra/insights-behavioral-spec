@@ -35,6 +35,7 @@ INSIGHTS_RESULTS_AGGREGATOR_BINARY = os.environ.get(
     "PATH_TO_LOCAL_AGGREGATOR", "insights-results-aggregator"
 )
 
+
 def _resolve_binary(binary: str) -> str:
     """Return the real path of the binary, following symlinks.
 
@@ -268,8 +269,7 @@ def start_insights_results_aggregator_in_background(context):
     # check if process has been started
     if process.poll() is not None:
         logs = (
-            f"--- STDOUT ---\n{stdout_path.read_text()}\n"
-            f"--- STDERR ---\n{stderr_path.read_text()}"
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
         )
         raise AssertionError(f"Insights Results Aggregator immediatelly finished!\n{logs}")
 

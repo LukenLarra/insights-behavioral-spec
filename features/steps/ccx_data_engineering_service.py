@@ -92,10 +92,10 @@ def start_ccx_upgrades_data_eng(context, port):
         check_service_started(context, "localhost", port, attempts=15, seconds_between_attempts=1)
     except Exception:
         logs = (
-            f"--- STDOUT ---\n{stdout_path.read_text()}\n"
-            f"--- STDERR ---\n{stderr_path.read_text()}"
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
         )
-        raise Exception(f"No service seem to be available at http://localhost:{port}\n{logs}")
+        msg = f"No service seem to be available at http://localhost:{port}\n{logs}"
+        raise Exception(msg) from None
     context.add_cleanup(lambda: _terminate_process(popen))
 
 
@@ -108,16 +108,16 @@ def start_rhobs_mock_service(context, port):
         "mocks",
         "rhobs",
     )
-    
+
     params = [
-        sys.executable, 
-        "-m", 
-        "uvicorn", 
-        "rhobs_service:app", 
-        "--port", 
-        str(port), 
-        "--app-dir", 
-        mock_dir
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "rhobs_service:app",
+        "--port",
+        str(port),
+        "--app-dir",
+        mock_dir,
     ]
 
     stdout_path = path_from_context(context, "", "rhobs-mock-stdout")
@@ -130,7 +130,7 @@ def start_rhobs_mock_service(context, port):
     context.add_cleanup(stderr_file.close)
 
     env = os.environ.copy()
-    
+
     popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 

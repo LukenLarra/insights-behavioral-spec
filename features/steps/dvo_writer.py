@@ -39,6 +39,7 @@ def _resolve_binary(binary: str) -> str:
     found = shutil.which(os.path.basename(binary))
     return os.path.realpath(found if found else binary)
 
+
 # time for newly started DVO writer to setup connections
 BREATH_TIME = 3
 
@@ -87,8 +88,7 @@ def start_dvo_writer_in_background(context):
     # check if process has been started
     if process.poll() is not None:
         logs = (
-            f"--- STDOUT ---\n{stdout_path.read_text()}\n"
-            f"--- STDERR ---\n{stderr_path.read_text()}"
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
         )
         raise AssertionError(f"DVO writer immediatelly finished!\n{logs}")
 

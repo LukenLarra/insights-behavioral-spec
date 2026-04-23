@@ -39,7 +39,14 @@ def _terminate_process(process: subprocess.Popen) -> None:
 @given("The CCX Inference Service is running on port {port:d}")
 def start_ccx_inference_service(context, port):
     """Run ccx-inference-service for a test and prepare its stop."""
-    params = [sys.executable, "-m", "uvicorn", "ccx_upgrades_inference.main:app", "--port", str(port)]
+    params = [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "ccx_upgrades_inference.main:app",
+        "--port",
+        str(port),
+    ]
     env = os.environ.copy()
 
     stdout_path = path_from_context(context, "ccx-upgrades-inference", "stdout")
@@ -63,14 +70,20 @@ def start_ccx_inference_mock_service(context, port):
     """Run ccx-inference-service mock for a test and prepare its stop."""
     mock_dir = os.path.join(
         os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
-        "insights-behavioral-spec", "mocks", "inference-service"
+        "insights-behavioral-spec",
+        "mocks",
+        "inference-service",
     )
-    
+
     params = [
-        sys.executable, "-m", "uvicorn", 
-        "inference_service:app", 
-        "--port", str(port), 
-        "--app-dir", mock_dir
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "inference_service:app",
+        "--port",
+        str(port),
+        "--app-dir",
+        mock_dir,
     ]
 
     stdout_path = path_from_context(context, "", "inference-mock-stdout")
@@ -90,6 +103,7 @@ def start_ccx_inference_mock_service(context, port):
 
     context.add_cleanup(lambda: _terminate_process(popen))
     context.mock_inference = popen
+
 
 @when("I stop the mock CCX Inference Service")
 def stop_ccx_inference_mock_service(context):

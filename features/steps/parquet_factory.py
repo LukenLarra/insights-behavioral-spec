@@ -15,6 +15,7 @@ from src.process_output import path_from_context
 # path do directory with rules results templates to be used
 DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
 
+
 @when('I set the environment variable "{env_name}" to "{env_value}"')
 def set_environment(context, env_name: str, env_value: str) -> None:
     """Set an environment variable for next executions."""

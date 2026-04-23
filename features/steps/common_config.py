@@ -14,9 +14,10 @@
 
 """Implementation of step for loading service configuration."""
 
+from pathlib import Path
+
 import toml
 import yaml
-from pathlib import Path
 from behave import given
 from kafka.cluster import ClusterMetadata
 
