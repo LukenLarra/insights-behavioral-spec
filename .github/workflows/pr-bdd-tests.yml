@@ -154,7 +154,7 @@ jobs:
           "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
 
       - name: Run BDD Framework
-        uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
+        uses: LukenLarra/RedHat-BDD-Framework/actions/main@fix/discover-respects-command
         with:
           service: ${{ matrix.service }}
           bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
@@ -175,4 +175,4 @@ jobs:
           merge-multiple: true
 
       - name: Publish BDD reports
-        uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
+        uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@fix/discover-respects-command
