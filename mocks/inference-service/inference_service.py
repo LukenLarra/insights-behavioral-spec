@@ -19,7 +19,7 @@ from fastapi import FastAPI, Request
 app = FastAPI()
 
 
-@app.api_route("/upgrade-risks-prediction", methods=["GET", "POST"])
+@app.get("/upgrade-risks-prediction")
 async def upgrade_risk_prediction_mock(request: Request):
     """Request handler for REST API endpoint to return upgrade risk prediction."""
     data = await request.json()

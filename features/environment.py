@@ -89,11 +89,6 @@ def before_scenario(context, scenario):
 
 def after_scenario(context, scenario):
     """Run after each scenario is run."""
-    if scenario.status == "failed" and hasattr(context, "parquet_factory_logs"):
-        print("\n=== Parquet Factory logs (scenario failed) ===")
-        print(context.parquet_factory_logs)
-        print("=== End of Parquet Factory logs ===\n")
-
     if "database" in scenario.effective_tags:
         prepare_db(context, CLEANUP_FILES, context.database_name)
 
