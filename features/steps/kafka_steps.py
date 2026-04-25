@@ -99,12 +99,14 @@ def delete_kafka_topic_with_partition(context, topic, partitions):
     """Delete a Kafka topic and recreate it with the given number of partitions."""
     bootstrap_server = f"{context.kafka_hostname}:{context.kafka_port}"
     num_partitions = int(partitions)
-    for attempt in range(3):
+    for _attempt in range(3):
         delete_topic(context, topic)
         if create_topic(bootstrap_server, topic, num_partitions):
             return
         time.sleep(2)
-    raise RuntimeError(f"Could not recreate topic '{topic}' with {num_partitions} partitions after 3 attempts")
+    raise RuntimeError(
+        f"Could not recreate topic '{topic}' with {num_partitions} partitions after 3 attempts"
+    )
 
 
 @when('I send the following message into Kafka topic "{topic}"')
