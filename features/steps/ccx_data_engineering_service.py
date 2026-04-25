@@ -54,18 +54,10 @@ def start_ccx_upgrades_data_eng(context, port):
 
     data_eng_path = os.getenv("PATH_TO_LOCAL_DATA_ENG_SERVICE")
     if not data_eng_path:
-        github_workspace = os.environ.get("GITHUB_WORKSPACE")
-        candidate_paths = [
-            os.path.join(os.getcwd(), "ccx-upgrades-data-eng"),
-            os.path.abspath(os.path.join(os.getcwd(), "..", "ccx-upgrades-data-eng")),
-        ]
-        if github_workspace:
-            candidate_paths.insert(0, os.path.join(github_workspace, "ccx-upgrades-data-eng"))
-
-        for candidate in candidate_paths:
-            if os.path.isdir(candidate):
-                data_eng_path = candidate
-                break
+        raise ValueError(
+            "PATH_TO_LOCAL_DATA_ENG_SERVICE is not set. "
+            "Point it to the local ccx-upgrades-data-eng directory."
+        )
 
     popen = subprocess.Popen(
         params,
