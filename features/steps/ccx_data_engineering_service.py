@@ -16,13 +16,13 @@
 
 import os
 import subprocess
-import time
 import sys
 
 import requests
 from behave import given, when
 from common_http import check_service_started
 from src.process_output import path_from_context
+from src.process_utils import terminate_process as _terminate_process
 
 
 @given("The CCX Data Engineering Service is running on port {port:d} with envs")
@@ -52,16 +52,31 @@ def start_ccx_upgrades_data_eng(context, port):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    data_eng_path = os.getenv("PATH_TO_LOCAL_DATA_ENG_SERVICE")
+    if not data_eng_path:
+        raise ValueError(
+            "PATH_TO_LOCAL_DATA_ENG_SERVICE is not set. "
+            "Point it to the local ccx-upgrades-data-eng directory."
+        )
+
     popen = subprocess.Popen(
         params,
         stdout=stdout_file,
         stderr=stderr_file,
         env=env,
+        cwd=data_eng_path,
     )
     assert popen is not None
 
-    check_service_started(context, "localhost", port, attempts=10)
-    context.add_cleanup(popen.terminate)
+    try:
+        check_service_started(context, "localhost", port, attempts=15, seconds_between_attempts=1)
+    except Exception:
+        logs = (
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
+        )
+        msg = f"No service seem to be available at http://localhost:{port}\n{logs}"
+        raise Exception(msg) from None
+    context.add_cleanup(lambda: _terminate_process(popen))
 
 
 @given("The mock RHOBS Service is running on port {port:d}")
@@ -73,16 +88,16 @@ def start_rhobs_mock_service(context, port):
         "mocks",
         "rhobs",
     )
-    
+
     params = [
-        sys.executable, 
-        "-m", 
-        "uvicorn", 
-        "rhobs_service:app", 
-        "--port", 
-        str(port), 
-        "--app-dir", 
-        mock_dir
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "rhobs_service:app",
+        "--port",
+        str(port),
+        "--app-dir",
+        mock_dir,
     ]
 
     stdout_path = path_from_context(context, "", "rhobs-mock-stdout")
@@ -95,13 +110,13 @@ def start_rhobs_mock_service(context, port):
     context.add_cleanup(stderr_file.close)
 
     env = os.environ.copy()
-    
+
     popen = subprocess.Popen(params, stdout=stdout_file, stderr=stderr_file, env=env)
     assert popen is not None
 
     # time.sleep(0.5)
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
     context.mock_rhobs = popen
     context.mock_rhobs_port = port
 
@@ -109,10 +124,7 @@ def start_rhobs_mock_service(context, port):
 @when("I stop the mock RHOBS Service")
 def stop_rhobs_mock_service(context):
     """Stop mocked RHOBS service."""
-    context.mock_rhobs.terminate()
-    while context.mock_rhobs.poll() is None:
-        # subprocess is still alive
-        time.sleep(0.1)
+    _terminate_process(context.mock_rhobs)
 
 
 @when("The mock RHOBS Service doesn't find the queried clusters")

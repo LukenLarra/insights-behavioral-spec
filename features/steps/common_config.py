@@ -14,10 +14,14 @@
 
 """Implementation of step for loading service configuration."""
 
+from pathlib import Path
+
 import toml
 import yaml
 from behave import given
 from kafka.cluster import ClusterMetadata
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 SERVICE_CONFIGS = {
     "SHA extractor": "insights_sha_extractor.yaml",
@@ -31,10 +35,10 @@ SERVICE_CONFIGS = {
 def kafka_broker_running(context, service):
     """Check if the configuration is valid and Kafka broker is running."""
     config = None
-    config_name = f"config/{SERVICE_CONFIGS[service]}"
+    config_name = PROJECT_ROOT / "config" / SERVICE_CONFIGS[service]
 
     with open(config_name) as file:
-        if config_name.endswith(".yaml"):
+        if str(config_name).endswith(".yaml"):
             config = yaml.safe_load(file)
             hostname = config["service"]["consumer"]["kwargs"]["bootstrap.servers"]
         else:

@@ -14,6 +14,7 @@
 
 """Implementation of test steps that run DVO writer and check its output."""
 
+import os
 import subprocess
 import time
 from subprocess import TimeoutExpired
@@ -21,9 +22,11 @@ from subprocess import TimeoutExpired
 from behave import given, then, when
 from dateutil import parser
 from src.process_output import path_from_context
+from src.process_utils import resolve_binary as _resolve_binary
 
 # DVO writer binary file name
-DVO_WRITER_BINARY = "insights-results-aggregator"
+DVO_WRITER_BINARY = os.environ.get("PATH_TO_LOCAL_DVO_WRITER", "insights-results-aggregator")
+
 
 # time for newly started DVO writer to setup connections
 BREATH_TIME = 3
@@ -49,12 +52,16 @@ def start_dvo_writer_in_background(context):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    real_binary = _resolve_binary(DVO_WRITER_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
+
     process = subprocess.Popen(
-        [DVO_WRITER_BINARY],
+        [real_binary],
         stdout=stdout_file,
         stderr=stderr_file,
         close_fds=True,
         bufsize=0,
+        cwd=binary_cwd,
     )
     # background process -> we can't communicate() with it
 
@@ -67,7 +74,11 @@ def start_dvo_writer_in_background(context):
     context.add_cleanup(process.terminate)
 
     # check if process has been started
-    assert process.poll() is None, "DVO writer immediatelly finished!"
+    if process.poll() is not None:
+        logs = (
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
+        )
+        raise AssertionError(f"DVO writer immediatelly finished!\n{logs}")
 
     # store process instance for later use
     context.dvo_writer_process = process

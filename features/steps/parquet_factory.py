@@ -12,9 +12,6 @@ from behave import then, when
 from src import kafka_util
 from src.process_output import path_from_context
 
-# parquet-factory binary file name
-PARQUET_FACTORY_BINARY = os.environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
-
 # path do directory with rules results templates to be used
 DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
 
@@ -41,6 +38,10 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
         environ.update(context.parquet_environment)
     environ["PARQUET_FACTORY__LOGGING__DEBUG"] = "false"
 
+    parquet_factory_executable = environ.get("PARQUET_FACTORY_BIN", "parquet-factory")
+    real_binary = os.path.realpath(parquet_factory_executable)
+    binary_cwd = os.path.dirname(real_binary)
+
     stdout_path = path_from_context(context, "parquet-factory", "stdout")
     stderr_path = path_from_context(context, "parquet-factory", "stderr")
 
@@ -51,10 +52,11 @@ def run_parquet_factory(context, timeout_sec: int) -> None:
     context.add_cleanup(stderr_file.close)
 
     proc = subprocess.Popen(
-        [PARQUET_FACTORY_BINARY],
+        [real_binary],
         stdout=stdout_file,
         stderr=stderr_file,
         env=environ,
+        cwd=binary_cwd,
     )
 
     print(f"timer will run for {timeout_sec}")

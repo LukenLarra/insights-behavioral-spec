@@ -2,14 +2,21 @@ project:
     name: "ccx-upgrades-data-eng"
     version: "1.0.0"
 
+ci:
+    repo: "ccx-upgrades-data-eng"
+    service: "data-engineering-service"
+    docker_profile: "test-upgrades-data-eng"
+    build_go: false
+
 tests:
     enabled: true
     path: "."
-    # command: "python -m behave insights-behavioral-spec/features/ccx-upgrades-data-eng --junit --junit-directory reports/junit --format pretty"
-    command: "python -m behave insights-behavioral-spec/features/ccx-upgrades-data-eng/smoketests.feature insights-behavioral-spec/features/ccx-upgrades-data-eng/request_prediction.feature insights-behavioral-spec/features/ccx-upgrades-data-eng/caching.feature --junit --junit-directory reports/junit --format pretty"
+    command: "python -m behave @insights-behavioral-spec/test_list/upgrades_data_eng_service.txt --junit --junit-directory reports/junit --format pretty"
+    # command: "python -m behave insights-behavioral-spec/features/ccx-upgrades-data-eng/smoketests.feature insights-behavioral-spec/features/ccx-upgrades-data-eng/request_prediction.feature insights-behavioral-spec/features/ccx-upgrades-data-eng/caching.feature --junit --junit-directory reports/junit --format pretty"
     bdd:
         features: "insights-behavioral-spec/features/ccx-upgrades-data-eng"
-        exclude: "insights-behavioral-spec/features/ccx-upgrades-data-eng/multicluster.feature"
+        exclude: "insights-behavioral-spec/features/ccx-upgrades-data-eng/multicluster.feature"     # Only for fallback
         steps: "insights-behavioral-spec/features/steps"
         environment: "insights-behavioral-spec/features/environment.py"
     env:
+        PATH_TO_LOCAL_DATA_ENG_SERVICE: "../ccx-upgrades-data-eng"
