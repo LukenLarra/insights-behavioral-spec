@@ -15,29 +15,17 @@
 """Implementation of test steps that run DVO writer and check its output."""
 
 import os
-import shutil
 import subprocess
 import time
 from subprocess import TimeoutExpired
 
 from behave import given, then, when
+from src.process_utils import resolve_binary as _resolve_binary
 from dateutil import parser
 from src.process_output import path_from_context
 
 # DVO writer binary file name
 DVO_WRITER_BINARY = os.environ.get("PATH_TO_LOCAL_DVO_WRITER", "insights-results-aggregator")
-
-
-def _resolve_binary(binary: str) -> str:
-    """Return the real path of the binary, following symlinks.
-
-    Handles absolute paths, relative paths that exist from CWD,
-    and names/relative paths that must be looked up on PATH.
-    """
-    if os.path.isabs(binary) or os.path.exists(binary):
-        return os.path.realpath(binary)
-    found = shutil.which(os.path.basename(binary))
-    return os.path.realpath(found if found else binary)
 
 
 # time for newly started DVO writer to setup connections

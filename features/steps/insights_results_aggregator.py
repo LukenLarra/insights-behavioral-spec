@@ -15,13 +15,13 @@
 """Implementation of test steps that run Insights Results Aggregator and check its output."""
 
 import os
-import shutil
 import subprocess
 import time
 from subprocess import TimeoutExpired
 
 import requests
 from behave import given, then, when
+from src.process_utils import resolve_binary as _resolve_binary
 from src import kafka_util, version
 from src.process_output import (
     filter_coverage_message,
@@ -34,18 +34,6 @@ from src.utils import construct_rh_token, find_block, get_array_from_json
 INSIGHTS_RESULTS_AGGREGATOR_BINARY = os.environ.get(
     "PATH_TO_LOCAL_AGGREGATOR", "insights-results-aggregator"
 )
-
-
-def _resolve_binary(binary: str) -> str:
-    """Return the real path of the binary, following symlinks.
-
-    Handles three cases: absolute path, relative path that exists from CWD,
-    and bare/relative name that must be looked up on PATH.
-    """
-    if os.path.isabs(binary) or os.path.exists(binary):
-        return os.path.realpath(binary)
-    found = shutil.which(os.path.basename(binary))
-    return os.path.realpath(found if found else binary)
 
 
 # time for newly started Insights Results Aggregator to setup connections and start HTTP server

@@ -21,20 +21,8 @@ import sys
 import requests
 from behave import given, when
 from common_http import check_service_started
+from src.process_utils import terminate_process as _terminate_process
 from src.process_output import path_from_context
-
-
-def _terminate_process(process: subprocess.Popen) -> None:
-    """Terminate a subprocess and wait until it is fully stopped."""
-    if process.poll() is not None:
-        return
-
-    process.terminate()
-    try:
-        process.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=5)
 
 
 @given("The CCX Data Engineering Service is running on port {port:d} with envs")

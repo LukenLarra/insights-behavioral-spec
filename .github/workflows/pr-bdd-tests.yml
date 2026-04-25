@@ -147,14 +147,8 @@ jobs:
                   python3 .github/scripts/resolve_bdd_env_paths.py \
                   "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
 
-            - name: Free ports
-              working-directory: insights-behavioral-spec
-              run: |
-                  python3 .github/scripts/free_bdd_ports.py \
-                  "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
-
             - name: Run BDD Framework
-              uses: LukenLarra/RedHat-BDD-Framework/actions/main@fix/include-multiple-features
+              uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
               with:
                   service: ${{ matrix.service }}
                   bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
@@ -175,4 +169,4 @@ jobs:
                   merge-multiple: true
 
             - name: Publish BDD reports
-              uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@fix/include-multiple-features
+              uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
