@@ -3,8 +3,6 @@
 import os
 import sys
 
-import pytest
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from generate_matrix import ServiceConfig, build_matrix, extract
@@ -76,9 +74,7 @@ class TestBuildMatrix:
 
     def test_multiple_services(self, tmp_path):
         for i in range(3):
-            (tmp_path / f"svc{i}-framework.yml").write_text(
-                f"repo: repo{i}\nservice: svc{i}\n"
-            )
+            (tmp_path / f"svc{i}-framework.yml").write_text(f"repo: repo{i}\nservice: svc{i}\n")
         result = build_matrix(str(tmp_path))
         assert len(result) == 3
 

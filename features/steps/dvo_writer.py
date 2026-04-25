@@ -20,9 +20,9 @@ import time
 from subprocess import TimeoutExpired
 
 from behave import given, then, when
-from src.process_utils import resolve_binary as _resolve_binary
 from dateutil import parser
 from src.process_output import path_from_context
+from src.process_utils import resolve_binary as _resolve_binary
 
 # DVO writer binary file name
 DVO_WRITER_BINARY = os.environ.get("PATH_TO_LOCAL_DVO_WRITER", "insights-results-aggregator")

@@ -21,13 +21,13 @@ from subprocess import TimeoutExpired
 
 import requests
 from behave import given, then, when
-from src.process_utils import resolve_binary as _resolve_binary
 from src import kafka_util, version
 from src.process_output import (
     filter_coverage_message,
     path_from_context,
     process_generated_output,
 )
+from src.process_utils import resolve_binary as _resolve_binary
 from src.utils import construct_rh_token, find_block, get_array_from_json
 
 # Insights Results Aggregator binary file name

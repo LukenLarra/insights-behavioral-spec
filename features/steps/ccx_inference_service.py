@@ -20,8 +20,8 @@ import sys
 
 from behave import given, when
 from common_http import check_service_started
-from src.process_utils import terminate_process as _terminate_process
 from src.process_output import path_from_context
+from src.process_utils import terminate_process as _terminate_process
 
 
 @given("The CCX Inference Service is running on port {port:d}")

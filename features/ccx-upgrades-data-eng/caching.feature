@@ -5,7 +5,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
 
   Background: Data eng service is running and well configured to work
     Given The mock CCX Inference Service is running on port 9090
-    And The mock RHOBS Service is running on port 9091
+    And The mock RHOBS Service is running on port 9093
 
 
   Scenario: Check that nothing is cached if CACHE_ENABLED is set to 0
@@ -16,7 +16,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 0                                      |
       | CACHE_TTL                   | 10                                     |
@@ -39,7 +39,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 0                                      |
@@ -62,7 +62,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 10                                     |
@@ -85,7 +85,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 60                                     |
@@ -108,7 +108,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 60                                     |
@@ -138,7 +138,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 60                                     |
@@ -185,7 +185,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test correct behavior of th
       | INFERENCE_URL               | http://localhost:9090                  |
       | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
       | ALLOW_INSECURE              | 1                                      |
-      | RHOBS_URL                   | http://localhost:9091                  |
+      | RHOBS_URL                   | http://localhost:9093                  |
       | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
       | CACHE_ENABLED               | 1                                      |
       | CACHE_TTL                   | 3                                      |

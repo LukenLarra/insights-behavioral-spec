@@ -14,6 +14,8 @@
 
 """An interface to Apache Kafka done using kcat utility and Python interface to Kafka."""
 
+import time
+
 from behave.runner import Context
 from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer
 from kafka.admin import NewTopic
@@ -39,17 +41,26 @@ def create_topic(hostname, topic_name, partitions=1):
         print(f"{topic_name} topic already exists")
 
 
-def delete_topic(context: Context, topic: str):
-    """Delete a Kafka topic."""
-    admin_client = KafkaAdminClient(
-        bootstrap_servers=[f"{context.kafka_hostname}:{context.kafka_port}"],
-    )
+def delete_topic(context: Context, topic: str, timeout: int = 10):
+    """Delete a Kafka topic and wait until the deletion is confirmed by the broker."""
+    bootstrap = f"{context.kafka_hostname}:{context.kafka_port}"
+    admin_client = KafkaAdminClient(bootstrap_servers=[bootstrap])
     try:
         admin_client.delete_topics(topics=[topic])
     except UnknownTopicOrPartitionError:
-        pass
+        return
     except Exception as e:
         print(f"Topic {topic} was not deleted. Error: {e}")
+        return
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        consumer = KafkaConsumer(bootstrap_servers=bootstrap)
+        if topic not in consumer.topics():
+            consumer.close()
+            return
+        consumer.close()
+        time.sleep(0.5)
 
 
 def send_event(bootstrap, topic, payload, headers=None, partition=None, timestamp=None):
