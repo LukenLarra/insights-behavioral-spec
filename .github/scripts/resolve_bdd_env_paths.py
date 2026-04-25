@@ -17,6 +17,8 @@ def resolve(workspace: str, spec_dir: str, value: str) -> str | None:
         return os.path.join(workspace, value)
     if value.startswith("./"):
         return os.path.join(spec_dir, value[2:])
+    if value.startswith("../"):
+        return os.path.normpath(os.path.join(spec_dir, value))
     return None
 
 

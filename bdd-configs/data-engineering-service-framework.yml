@@ -19,3 +19,4 @@ tests:
         steps: "insights-behavioral-spec/features/steps"
         environment: "insights-behavioral-spec/features/environment.py"
     env:
+        PATH_TO_LOCAL_DATA_ENG_SERVICE: "../ccx-upgrades-data-eng"

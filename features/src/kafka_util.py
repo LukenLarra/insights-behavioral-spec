@@ -30,15 +30,17 @@ class SendEventError(Exception):
         super().__init__(message)
 
 
-def create_topic(hostname, topic_name, partitions=1):
-    """Create a new Kafka topic."""
+def create_topic(hostname, topic_name, partitions=1) -> bool:
+    """Create a new Kafka topic. Returns True if created, False if it already existed."""
     topic = NewTopic(topic_name, partitions, 1)
     admin_client = KafkaAdminClient(bootstrap_servers=hostname)
     try:
         outcome = admin_client.create_topics([topic])
         assert outcome.topic_errors[0][1] == 0, "Topic creation failure: {outcome}"
+        return True
     except TopicAlreadyExistsError:
         print(f"{topic_name} topic already exists")
+        return False
 
 
 def delete_topic(context: Context, topic: str, timeout: int = 10):
