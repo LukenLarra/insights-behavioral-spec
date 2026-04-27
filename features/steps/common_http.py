@@ -36,7 +36,7 @@ def check_service_started(context, hostname, port, attempts=5, seconds_between_a
                 return
             else:
                 attempts -= 1
-        except requests.ConnectionError:
+        except requests.RequestException:
             attempts -= 1
     raise Exception(f"No service seem to be available at http://{hostname}:{port}")
 
@@ -116,7 +116,9 @@ def request_endpoint(context, endpoint, hostname, port):
 @then("The status code of the response is {status:d}")
 def check_status_code(context, status):
     """Check the HTTP status code for latest response from tested service."""
-    assert context.response.status_code == status, f"Status code is {context.response.status_code}"
+    assert context.response.status_code == status, (
+        f"Status code is {context.response.status_code}, body: {context.response.text[:2000]}"
+    )
 
 
 @then("The body of the response has the following schema")

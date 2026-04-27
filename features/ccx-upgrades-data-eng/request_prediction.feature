@@ -5,7 +5,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test well known values
 
   Background: Data eng service is running and well configured to work
     Given The mock CCX Inference Service is running on port 9090
-      And The mock RHOBS Service is running on port 9091
+      And The mock RHOBS Service is running on port 9093
       And The CCX Data Engineering Service is running on port 8000 with envs
           | variable                    | value                                  |
           | CLIENT_ID                   | test-client-id                         |
@@ -13,7 +13,7 @@ Feature: Upgrade Risks Prediction Data Engineering - test well known values
           | INFERENCE_URL               | http://localhost:9090                  |
           | SSO_ISSUER                  | http://mock-oauth2-server:8081/default |
           | ALLOW_INSECURE              | 1                                      |
-          | RHOBS_URL                   | http://localhost:9091                  |
+          | RHOBS_URL                   | http://localhost:9093                  |
           | OAUTHLIB_INSECURE_TRANSPORT | 1                                      |
 
   Scenario: Check Data Engineering Service response with an invalid cluster ID in the request

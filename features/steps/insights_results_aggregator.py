@@ -27,16 +27,20 @@ from src.process_output import (
     path_from_context,
     process_generated_output,
 )
+from src.process_utils import resolve_binary as _resolve_binary
 from src.utils import construct_rh_token, find_block, get_array_from_json
 
 # Insights Results Aggregator binary file name
-INSIGHTS_RESULTS_AGGREGATOR_BINARY = "insights-results-aggregator"
+INSIGHTS_RESULTS_AGGREGATOR_BINARY = os.environ.get(
+    "PATH_TO_LOCAL_AGGREGATOR", "insights-results-aggregator"
+)
+
 
 # time for newly started Insights Results Aggregator to setup connections and start HTTP server
 BREATH_TIME = 3
 
 # path do directory with rules results to be send into Insights Results Aggregator
-DATA_DIRECTORY = "test_data"
+DATA_DIRECTORY = os.environ.get("TEST_DATA_DIR", "test_data")
 
 # REST API access timeout
 TIMEOUT = 5000
@@ -69,18 +73,20 @@ def run_insights_results_aggregator_with_flag_and_config_file(context, flag, con
         if not hasattr(context, "no_IRA_environment")
         else context.no_IRA_environment
     )
-    # add new environment variable into environments
-    environment["INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"] = config
+    environment["INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"] = os.path.abspath(config)
     start_aggregator(context, flag, environment)
 
 
 def start_aggregator(context, flag, environment):
     """Start Insights Results Aggregator with set up command line flags and env. variables."""
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, flag],
+        [real_binary, flag],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environment,
+        cwd=binary_cwd,
     )
 
     # check if subprocess has been started and its output caught
@@ -128,6 +134,9 @@ The commands are:
     # filter message that can be printed by GOCOVERAGE machinery
     stdout = filter_coverage_message(stdout)
 
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    stdout = stdout.replace(real_binary, os.path.basename(real_binary))
+
     # check if the output contains expected help message
     # any optional garbage above and below help message is ignored
     assert expected_output.strip() in stdout.strip(), f"{stdout} != {expected_output}"
@@ -163,14 +172,17 @@ def check_actual_configuration_for_aggregator(context):
 @when("I migrate aggregator database to version #{version:n}")
 def perform_aggregator_database_migration(context, version):
     """Perform aggregator database migration to selected version."""
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
     environ = os.environ.copy()
     environ["INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE"] = "dvo_recommendations"
     # run DVO migrations first to not mess with the OCP migrations output we're checking later
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
+        [real_binary, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
+        cwd=binary_cwd,
     )
 
     # check if subprocess has been started and its output caught
@@ -180,10 +192,11 @@ def perform_aggregator_database_migration(context, version):
 
     # run OCP migrations
     out = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY, "migrate", str(version)],
+        [real_binary, "migrate", str(version)],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environ,
+        cwd=binary_cwd,
     )
 
     assert out is not None
@@ -220,12 +233,16 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(stdout_file.close)
     context.add_cleanup(stderr_file.close)
 
+    real_binary = _resolve_binary(INSIGHTS_RESULTS_AGGREGATOR_BINARY)
+    binary_cwd = os.path.dirname(real_binary)
+
     process = subprocess.Popen(
-        [INSIGHTS_RESULTS_AGGREGATOR_BINARY],
+        [real_binary],
         stdout=stdout_file,
         stderr=stderr_file,
         close_fds=True,
         bufsize=0,
+        cwd=binary_cwd,
     )
     # background process -> we can't communicate() with it
 
@@ -238,7 +255,11 @@ def start_insights_results_aggregator_in_background(context):
     context.add_cleanup(process.terminate)
 
     # check if process has been started
-    assert process.poll() is None, "Insights Results Aggregator immediatelly finished!"
+    if process.poll() is not None:
+        logs = (
+            f"--- STDOUT ---\n{stdout_path.read_text()}\n--- STDERR ---\n{stderr_path.read_text()}"
+        )
+        raise AssertionError(f"Insights Results Aggregator immediatelly finished!\n{logs}")
 
     # store process instance for later use
     context.aggregator_process = process

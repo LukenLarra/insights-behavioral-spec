@@ -1,0 +1,172 @@
+name: BDD Tests
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    generate-matrix:
+        runs-on: ubuntu-latest
+        outputs:
+            matrix: ${{ steps.set-matrix.outputs.matrix }}
+            has_services: ${{ steps.set-matrix.outputs.has_services }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - id: set-matrix
+              run: python3 .github/scripts/generate_matrix.py
+
+    bdd-tests:
+        needs: generate-matrix
+        if: ${{ needs.generate-matrix.outputs.has_services == 'true' }}
+        name: Test ${{ matrix.service }}
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+
+        services:
+            kafka:
+                image: quay.io/ccxdev/kafka-no-zk:latest
+                ports: [9092:9092]
+                env:
+                    KAFKA_ADVERTISED_HOST_NAME: localhost
+                options: >-
+                    --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
+                    --health-interval 10s
+                    --health-timeout 10s
+                    --health-retries 10
+
+            database:
+                image: postgres:13.9
+                ports: [5432:5432]
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: test
+
+            minio:
+                image: quay.io/ccxdev/minio-server-ubi:latest
+                ports: [9000:9000]
+                env:
+                    MINIO_ACCESS_KEY: test_access_key
+                    MINIO_SECRET_KEY: test_secret_access_key
+                    PORT: 9000
+
+            pushgateway:
+                image: quay.io/ccxdev/prom-pushgateway-admin:latest
+                ports: [9091:9091]
+
+            mock-oauth2-server:
+                image: ghcr.io/navikt/mock-oauth2-server:2.2.1
+                ports: [8081:8081]
+                env:
+                    PORT: 8081
+
+        steps:
+            - name: Checkout behavioral spec repository
+              uses: actions/checkout@v4
+              with:
+                  path: insights-behavioral-spec
+
+            - name: Checkout service repository
+              uses: actions/checkout@v4
+              with:
+                  repository: RedHatInsights/${{ matrix.repo }}
+                  path: ${{ matrix.repo }}
+
+            - name: Checkout binary repository
+              if: matrix.binary_repo != ''
+              uses: actions/checkout@v4
+              with:
+                  repository: RedHatInsights/${{ matrix.binary_repo }}
+                  path: ${{ matrix.binary_repo }}
+
+            - name: Install kcat
+              run: |
+                  sudo apt-get update -q
+                  sudo apt-get install -y kafkacat
+
+            - name: Add hosts entries
+              run: |
+                  echo "127.0.0.1 pushgateway" | sudo tee -a /etc/hosts
+                  echo "127.0.0.1 mock-oauth2-server" | sudo tee -a /etc/hosts
+
+            - name: Set up Go
+              if: matrix.build_go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.25"
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Install Python dependencies
+              working-directory: insights-behavioral-spec
+              run: pip install -r requirements.txt
+
+            - name: Build service binary
+              run: |
+                  build_dir="${{ matrix.binary_repo != '' && matrix.binary_repo || matrix.repo }}"
+
+                  if [ -f "$build_dir/build.sh" ]; then
+                    (cd "$build_dir" && ./build.sh)
+                  elif [ -f "$build_dir/Makefile" ] && grep -q "^build:" "$build_dir/Makefile"; then
+                    (cd "$build_dir" && make build)
+                  else
+                    echo "No build step found"
+                  fi
+
+            - name: Link service binary into spec directory
+              if: matrix.build_go
+              run: |
+                  build_dir="${{ matrix.binary_repo != '' && matrix.binary_repo || matrix.repo }}"
+
+                  find "${{ github.workspace }}/$build_dir" -maxdepth 1 -type f -executable | while read -r bin; do
+                      ln -sf "$bin" "${{ github.workspace }}/insights-behavioral-spec/$(basename "$bin")"
+                  done
+
+                  echo "${{ github.workspace }}/insights-behavioral-spec" >> $GITHUB_PATH
+
+            - name: Prepare BDD environment
+              working-directory: insights-behavioral-spec/bdd-configs
+              run: |
+                  ln -sf .. insights-behavioral-spec
+                  ln -sf ../config config
+                  ln -sf ../test_data test_data
+
+            - name: Resolve BDD paths
+              working-directory: insights-behavioral-spec
+              run: |
+                  python3 .github/scripts/resolve_bdd_env_paths.py \
+                  "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
+
+            - name: Run BDD Framework
+              uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
+              with:
+                  service: ${{ matrix.service }}
+                  bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
+                  test_requirements: "insights-behavioral-spec/requirements.txt"
+                  service_package: ${{ matrix.service_package != '' && format('{0}/{1}', github.workspace, matrix.service_package) || '' }}
+                  artifact_name_suffix: "-job-${{ strategy.job-index }}"
+
+    publish-reports:
+        needs: [generate-matrix, bdd-tests]
+        if: always() && needs.bdd-tests.result != 'skipped'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download all test reports
+              uses: actions/download-artifact@v4
+              with:
+                  pattern: bdd-test-reports-*
+                  path: reports/junit
+                  merge-multiple: true
+
+            - name: Publish BDD reports
+              uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main

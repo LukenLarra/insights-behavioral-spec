@@ -16,18 +16,25 @@
 
 import os
 import subprocess
-import time
 import sys
 
 from behave import given, when
 from common_http import check_service_started
 from src.process_output import path_from_context
+from src.process_utils import terminate_process as _terminate_process
 
 
 @given("The CCX Inference Service is running on port {port:d}")
 def start_ccx_inference_service(context, port):
     """Run ccx-inference-service for a test and prepare its stop."""
-    params = [sys.executable, "-m", "uvicorn", "ccx_upgrades_inference.main:app", "--port", str(port)]
+    params = [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "ccx_upgrades_inference.main:app",
+        "--port",
+        str(port),
+    ]
     env = os.environ.copy()
 
     stdout_path = path_from_context(context, "ccx-upgrades-inference", "stdout")
@@ -43,7 +50,7 @@ def start_ccx_inference_service(context, port):
     assert popen is not None
 
     check_service_started(context, "localhost", port, seconds_between_attempts=1)
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
 
 
 @given("The mock CCX Inference Service is running on port {port:d}")
@@ -51,14 +58,20 @@ def start_ccx_inference_mock_service(context, port):
     """Run ccx-inference-service mock for a test and prepare its stop."""
     mock_dir = os.path.join(
         os.environ.get("GITHUB_WORKSPACE", os.getcwd()),
-        "insights-behavioral-spec", "mocks", "inference-service"
+        "insights-behavioral-spec",
+        "mocks",
+        "inference-service",
     )
-    
+
     params = [
-        sys.executable, "-m", "uvicorn", 
-        "inference_service:app", 
-        "--port", str(port), 
-        "--app-dir", mock_dir
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "inference_service:app",
+        "--port",
+        str(port),
+        "--app-dir",
+        mock_dir,
     ]
 
     stdout_path = path_from_context(context, "", "inference-mock-stdout")
@@ -76,13 +89,11 @@ def start_ccx_inference_mock_service(context, port):
     assert popen is not None
     check_service_started(context, "localhost", port, attempts=10, seconds_between_attempts=1)
 
-    context.add_cleanup(popen.terminate)
+    context.add_cleanup(lambda: _terminate_process(popen))
     context.mock_inference = popen
+
 
 @when("I stop the mock CCX Inference Service")
 def stop_ccx_inference_mock_service(context):
     """Stop mocked inference service."""
-    context.mock_inference.terminate()
-    while context.mock_inference.poll() is None:
-        # subprocess is still alive
-        time.sleep(0.1)
+    _terminate_process(context.mock_inference)

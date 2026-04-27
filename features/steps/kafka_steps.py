@@ -16,6 +16,7 @@
 
 import json
 import subprocess
+import time
 
 from behave import given, then, when
 from src.kafka_util import create_topic, delete_topic, send_event
@@ -95,13 +96,16 @@ def delete_kafka_topic(context, topic):
 @given('Kafka topic "{topic}" is empty and has {partitions} partition')
 @given('Kafka topic "{topic}" is empty and has {partitions} partitions')
 def delete_kafka_topic_with_partition(context, topic, partitions):
-    """Delete a Kafka topic."""
-    delete_topic(context, topic)
+    """Delete a Kafka topic and recreate it with the given number of partitions."""
     bootstrap_server = f"{context.kafka_hostname}:{context.kafka_port}"
-    create_topic(
-        bootstrap_server,
-        topic,
-        int(partitions),
+    num_partitions = int(partitions)
+    for _attempt in range(3):
+        delete_topic(context, topic)
+        if create_topic(bootstrap_server, topic, num_partitions):
+            return
+        time.sleep(2)
+    raise RuntimeError(
+        f"Could not recreate topic '{topic}' with {num_partitions} partitions after 3 attempts"
     )
 
 
