@@ -148,7 +148,7 @@ jobs:
                   "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
 
             - name: Run BDD Framework
-              uses: LukenLarra/RedHat-BDD-Framework/actions/main@main
+              uses: LukenLarra/shepherd_bdd/actions/main@main
               with:
                   service: ${{ matrix.service }}
                   bdd_config: "${{ github.workspace }}/insights-behavioral-spec/bdd-configs/${{ matrix.config }}"
@@ -169,4 +169,4 @@ jobs:
                   merge-multiple: true
 
             - name: Publish BDD reports
-              uses: LukenLarra/RedHat-BDD-Framework/actions/publish-reports@main
+              uses: LukenLarra/shepherd_bdd/actions/publish-reports@main
